@@ -49,6 +49,7 @@ import org.geysermc.event.subscribe.Subscriber;
 import org.geysermc.event.util.TriConsumer;
 import org.lanternpowered.lmbda.LambdaFactory;
 
+@SuppressWarnings("UnstableApiUsage")
 abstract class BaseBusImpl<E, S extends Subscriber<? extends E>> implements BaseBus<E, S> {
   private static final MethodHandles.Lookup CALLER = MethodHandles.lookup();
 

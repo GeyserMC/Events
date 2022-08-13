@@ -134,8 +134,8 @@ public class EventBusTest {
     listener.resetCounts();
 
     bus.fire(new TestChildEvent());
-    assertEquals(0, listener.publicEventInvokeCount);
-    assertEquals(0, listener.privateEventInvokeCount);
+    assertEquals(1, listener.publicEventInvokeCount);
+    assertEquals(1, listener.privateEventInvokeCount);
     assertEquals(0, listener.baseEventInvokeCount);
     assertEquals(1, listener.childEventInvokeCount);
     listener.resetCounts();
@@ -143,7 +143,7 @@ public class EventBusTest {
     bus.fire(new Object());
     assertEquals(0, listener.publicEventInvokeCount);
     assertEquals(0, listener.privateEventInvokeCount);
-    assertEquals(1, listener.baseEventInvokeCount);
+    assertEquals(0, listener.baseEventInvokeCount);
     assertEquals(0, listener.childEventInvokeCount);
   }
 

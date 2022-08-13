@@ -15,7 +15,7 @@ repositories {
 }
 
 dependencies {
-  implementation("com.google.guava", "guava", "21.0")
+  implementation("com.google.guava", "guava", "17.0")
   implementation("org.lanternpowered", "lmbda", "2.0.0")
 
   compileOnly("org.checkerframework", "checker-qual", "3.19.0")
