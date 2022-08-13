@@ -38,7 +38,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.geysermc.event.Cancellable;
 import org.geysermc.event.Event;
 import org.geysermc.event.PostOrder;
-import org.geysermc.event.bus.impl.BusImpl;
+import org.geysermc.event.bus.impl.EventBusImpl;
 import org.geysermc.event.subscribe.Subscribe;
 import org.geysermc.event.subscribe.Subscriber;
 import org.geysermc.event.subscribe.impl.SubscriberImpl;
@@ -48,7 +48,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class BusTest {
+public class EventBusTest {
   private TestBusImpl bus;
 
   @BeforeEach
@@ -292,7 +292,7 @@ public class BusTest {
     }
   }
 
-  static final class TestBusImpl extends BusImpl<Object, TestSubscriberImpl<?>> {
+  static final class TestBusImpl extends EventBusImpl<Object, TestSubscriberImpl<?>> {
     int createdMethodSubscriptions = 0;
     int createdConsumerSubscriptions = 0;
 

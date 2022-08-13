@@ -1,8 +1,10 @@
 plugins {
   id("java")
   id("net.kyori.indra.license-header") version "2.1.1"
+  id("com.jfrog.artifactory") version "4.29.0"
   checkstyle
   `java-library`
+  `maven-publish`
 }
 
 group = "org.geysermc.event"
@@ -43,4 +45,42 @@ license {
 
 tasks.getByName<Test>("test") {
   useJUnitPlatform()
+}
+
+java {
+  sourceCompatibility = JavaVersion.VERSION_1_8
+  targetCompatibility = JavaVersion.VERSION_1_8
+
+  withSourcesJar()
+}
+
+fun Project.isSnapshot(): Boolean =
+  version.toString().endsWith("-SNAPSHOT")
+
+publishing {
+  publications {
+    create<MavenPublication>("mavenJava") {
+      groupId = project.group as String
+      artifactId = project.name
+      version = project.version as String
+
+      from(components["java"])
+    }
+  }
+}
+
+artifactory {
+  setContextUrl("https://repo.opencollab.dev/artifactory")
+  publish {
+    repository {
+      setRepoKey(if (isSnapshot()) "maven-snapshots" else "maven-releases")
+      setMavenCompatible(true)
+    }
+    defaults {
+      publications("mavenJava")
+      setPublishArtifacts(true)
+      setPublishPom(true)
+      setPublishIvy(false)
+    }
+  }
 }

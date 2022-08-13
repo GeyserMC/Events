@@ -23,17 +23,14 @@
  * @link https://github.com/GeyserMC/Events
  */
 
-package org.geysermc.event.bus.impl.util;
+package org.geysermc.event;
 
-import org.geysermc.event.Cancellable;
-import org.geysermc.event.subscribe.Subscriber;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-public final class SubscriberUtils {
-  public static boolean isCancelled(Object event) {
-    return event instanceof Cancellable && ((Cancellable) event).isCancelled();
-  }
-
-  public static boolean shouldCall(Subscriber<?> subscriber, Object event) {
-    return subscriber.ignoreCancelled() || !isCancelled(event);
-  }
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+public @interface Listener {
 }

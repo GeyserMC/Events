@@ -25,62 +25,81 @@
 
 package org.geysermc.event.bus.impl;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimaps;
+import com.google.common.collect.SetMultimap;
 import java.util.Collections;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.geysermc.event.bus.Bus;
+import org.geysermc.event.bus.OwnedEventBus;
+import org.geysermc.event.subscribe.OwnedSubscriber;
 import org.geysermc.event.subscribe.Subscribe;
 import org.geysermc.event.subscribe.Subscriber;
 
-public abstract class BusImpl<E, S extends Subscriber<? extends E>>
+public abstract class OwnedEventBusImpl<O, E, S extends OwnedSubscriber<O, ? extends E>>
     extends BaseBusImpl<E, S>
-    implements Bus<E, S> {
+    implements OwnedEventBus<O, E, S> {
 
-  protected abstract <H, T extends E, B extends Subscriber<T>> B makeSubscription(
+  private final SetMultimap<O, Subscriber<?>> ownedSubscribers =
+      Multimaps.synchronizedSetMultimap(HashMultimap.create());
+
+  protected abstract <L, T extends E, B extends OwnedSubscriber<O, T>> B makeSubscription(
+      O owner,
       Class<T> eventClass,
       Subscribe subscribe,
-      H listener,
-      BiConsumer<H, T> handler
+      L listener,
+      BiConsumer<L, T> handler
   );
 
-  protected abstract <T extends E, B extends Subscriber<T>> B makeSubscription(
+  protected abstract <T extends E, B extends OwnedSubscriber<O, T>> B makeSubscription(
+      O owner,
       Class<T> eventClass,
       Consumer<T> handler
   );
 
   @Override
+  @NonNull
   @SuppressWarnings("unchecked")
-  public void register(@NonNull Object listener) {
-    findSubscriptions(listener, (eventType, subscribe, handler) -> {
-      S subscriber =
-          (S) makeSubscription(eventType, subscribe, listener, handler);
+  public <T extends E, U extends OwnedSubscriber<O, T>> U subscribe(
+      @NonNull O owner,
+      @NonNull Class<T> eventClass,
+      @NonNull Consumer<T> handler
+  ) {
+    OwnedSubscriber<O, T> subscription =
+        makeSubscription(owner, eventClass, handler);
 
-      register(eventType, subscriber);
+    synchronized (ownedSubscribers) {
+      if (ownedSubscribers.put(owner, subscription)) {
+        register(eventClass, (S) subscription);
+      }
+      return (U) subscription;
+    }
+  }
+
+  @Override
+  @SuppressWarnings("unchecked")
+  public void register(@NonNull O owner, @NonNull Object listener) {
+    findSubscriptions(listener, (eventClass, subscribe, handler) -> {
+      S subscriber =
+          (S) makeSubscription(owner, eventClass, subscribe, listener, handler);
+
+      register(eventClass, subscriber);
+      ownedSubscribers.put(owner, subscriber);
     });
   }
 
   @Override
+  public void unregisterAll(@NonNull O owner) {
+    unsubscribeMany(castGenericSet(ownedSubscribers.removeAll(owner)));
+  }
+
+  @Override
   @NonNull
-  @SuppressWarnings("unchecked")
-  public <T extends E, U extends Subscriber<T>> U subscribe(
-      @NonNull Class<T> eventClass,
-      @NonNull Consumer<T> consumer
+  public <T extends E> Set<? extends OwnedSubscriber<O, T>> subscribers(
+      @NonNull Class<T> eventClass
   ) {
-    U subscription = makeSubscription(eventClass, consumer);
-    register(eventClass, (S) subscription);
-    return subscription;
-  }
-
-  @Override
-  public void unregisterAll() {
-    super.unsubscribeAll();
-  }
-
-  @Override
-  @NonNull
-  public <T extends E> Set<? extends Subscriber<T>> subscribers(@NonNull Class<T> eventClass) {
     return Collections.unmodifiableSet(eventSubscribers(eventClass));
   }
 }

@@ -29,7 +29,7 @@ import java.util.function.Consumer;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.geysermc.event.subscribe.Subscriber;
 
-public interface Bus<E, S extends Subscriber<? extends E>> extends BaseBus<E, S> {
+public interface EventBus<E, S extends Subscriber<? extends E>> extends BaseBus<E, S> {
   /**
    * Registers events for the given listener.
    *

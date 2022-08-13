@@ -43,7 +43,7 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.geysermc.event.bus.BaseBus;
-import org.geysermc.event.bus.impl.util.SubscriberUtils;
+import org.geysermc.event.bus.impl.util.Utils;
 import org.geysermc.event.subscribe.Subscribe;
 import org.geysermc.event.subscribe.Subscriber;
 import org.geysermc.event.util.TriConsumer;
@@ -52,22 +52,45 @@ import org.lanternpowered.lmbda.LambdaFactory;
 abstract class BaseBusImpl<E, S extends Subscriber<? extends E>> implements BaseBus<E, S> {
   private static final MethodHandles.Lookup CALLER = MethodHandles.lookup();
 
+  private Class<? super E> eventType;
+
   private final SetMultimap<Class<?>, Subscriber<?>> subscribers =
       Multimaps.synchronizedSetMultimap(HashMultimap.create());
 
-  private final Class<? super E> eventType;
+  // adding and removing is all managed in sortedSubscribersCache
+  private final SetMultimap<Subscriber<?>, Class<?>> subscriberCacheEntries =
+      Multimaps.synchronizedSetMultimap(HashMultimap.create());
 
   @SuppressWarnings("unchecked")
   private final LoadingCache<Class<?>, List<Subscriber<?>>> sortedSubscribersCache =
       CacheBuilder.newBuilder()
-          .build(CacheLoader.from(eventClass -> {
-            synchronized (subscribers) {
-              Set<S> classSubscribers = (Set<S>) subscribers.get(eventClass);
-
-              List<S> sortedSubscribers = new ArrayList<>(classSubscribers);
-              sortedSubscribers.sort(Comparator.comparingInt(s -> s.order().ordinal()));
-              return Collections.unmodifiableList(sortedSubscribers);
+          .removalListener((listener) -> {
+            Class<?> eventClass = (Class<?>) listener.getKey();
+            List<Subscriber<?>> subscribers = (List<Subscriber<?>>) listener.getValue();
+            synchronized (subscriberCacheEntries) {
+              for (Subscriber<?> subscriber : subscribers) {
+                subscriberCacheEntries.remove(subscriber, eventClass);
+              }
             }
+          })
+          .build(CacheLoader.from(eventClass -> {
+            Set<Class<?>> ancestors = Utils.ancestorsThatUse(eventClass, eventType);
+
+            List<Subscriber<?>> sortedSubscribers = new ArrayList<>();
+            synchronized (subscribers) {
+              for (Class<?> ancestor : ancestors) {
+                sortedSubscribers.addAll(subscribers.get(ancestor));
+              }
+            }
+            sortedSubscribers.sort(Comparator.comparingInt(s -> s.order().ordinal()));
+            sortedSubscribers = Collections.unmodifiableList(sortedSubscribers);
+
+            synchronized (subscriberCacheEntries) {
+              for (Subscriber<?> subscriber : sortedSubscribers) {
+                subscriberCacheEntries.put(subscriber, eventClass);
+              }
+            }
+            return sortedSubscribers;
           }));
 
 
@@ -131,17 +154,15 @@ abstract class BaseBusImpl<E, S extends Subscriber<? extends E>> implements Base
     synchronized (subscribers) {
       // we can trust the subscription because the implementation that will be used is final.
       Class<? extends E> eventClass = subscription.eventClass();
-      if (subscribers.remove(eventClass, subscription)) {
+      if (!subscribers.remove(eventClass, subscription)) {
         sortedSubscribersCache.invalidate(eventClass);
       }
     }
   }
 
   protected void unsubscribeMany(Iterable<S> subscriptions) {
-    synchronized (subscribers) {
-      for (S subscription : subscriptions) {
-        unsubscribe(subscription);
-      }
+    for (S subscription : subscriptions) {
+      unsubscribe(subscription);
     }
   }
 
@@ -158,7 +179,7 @@ abstract class BaseBusImpl<E, S extends Subscriber<? extends E>> implements Base
     boolean successful = true;
 
     for (Subscriber subscriber : sortedSubscribers(event.getClass())) {
-      if (SubscriberUtils.shouldCall(subscriber, event)) {
+      if (Utils.shouldCallSubscriber(subscriber, event)) {
         try {
           subscriber.invoke(event);
         } catch (Throwable throwable) {

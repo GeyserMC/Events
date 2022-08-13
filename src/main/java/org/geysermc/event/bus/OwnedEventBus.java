@@ -31,7 +31,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.geysermc.event.subscribe.OwnedSubscriber;
 import org.geysermc.event.subscribe.Subscriber;
 
-public interface OwnedBus<O, E, S extends OwnedSubscriber<O, ? extends E>> extends BaseBus<E, S> {
+public interface OwnedEventBus<O, E, S extends OwnedSubscriber<O, ? extends E>> extends BaseBus<E, S> {
   /**
    * Subscribes to the given event see {@link Subscriber}.
    * <p>
