@@ -30,7 +30,6 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.geysermc.event.PostOrder;
 import org.geysermc.event.bus.EventBus;
 import org.geysermc.event.subscribe.Subscribe;
@@ -50,7 +49,7 @@ public abstract class EventBusImpl<E, S extends Subscriber<? extends E>>
   protected abstract <T extends E, B extends Subscriber<T>> B makeSubscription(
       @NonNull Class<T> eventClass,
       @NonNull Consumer<T> handler,
-      @Nullable PostOrder postOrder
+      @NonNull PostOrder postOrder
   );
 
   @Override

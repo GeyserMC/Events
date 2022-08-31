@@ -35,7 +35,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.geysermc.event.Cancellable;
 import org.geysermc.event.Event;
 import org.geysermc.event.PostOrder;
@@ -317,7 +316,7 @@ public class EventBusTest {
     protected <T, B extends Subscriber<T>> B makeSubscription(
         @NonNull Class<T> eventClass,
         @NonNull Consumer<T> handler,
-        @Nullable PostOrder postOrder
+        @NonNull PostOrder postOrder
     ) {
       createdConsumerSubscriptions++;
       return (B) new TestSubscriberImpl<>(eventClass, handler, postOrder);

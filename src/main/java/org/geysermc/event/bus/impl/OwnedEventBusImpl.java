@@ -33,7 +33,6 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.geysermc.event.PostOrder;
 import org.geysermc.event.bus.OwnedEventBus;
 import org.geysermc.event.subscribe.OwnedSubscriber;
@@ -59,7 +58,7 @@ public abstract class OwnedEventBusImpl<O, E, S extends OwnedSubscriber<O, ? ext
       @NonNull O owner,
       @NonNull Class<T> eventClass,
       @NonNull Consumer<T> handler,
-      @Nullable PostOrder postOrder
+      @NonNull PostOrder postOrder
   );
 
   @Override

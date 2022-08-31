@@ -28,7 +28,6 @@ package org.geysermc.event.subscribe.impl;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.geysermc.event.PostOrder;
 import org.geysermc.event.subscribe.Subscriber;
 
@@ -41,10 +40,10 @@ public abstract class SubscriberImpl<E> implements Subscriber<E> {
   public SubscriberImpl(
       @NonNull Class<E> eventClass,
       @NonNull Consumer<E> handler,
-      @Nullable PostOrder postOrder
+      @NonNull PostOrder postOrder
   ) {
     this.eventClass = eventClass;
-    this.postOrder = postOrder != null ? postOrder : PostOrder.NORMAL;
+    this.postOrder = postOrder;
     this.ignoreCancelled = false;
     this.handler = handler;
   }
