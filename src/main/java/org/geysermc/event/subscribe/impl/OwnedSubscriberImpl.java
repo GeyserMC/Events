@@ -28,6 +28,7 @@ package org.geysermc.event.subscribe.impl;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.geysermc.event.PostOrder;
 import org.geysermc.event.subscribe.OwnedSubscriber;
 
@@ -37,21 +38,22 @@ public abstract class OwnedSubscriberImpl<O, E> extends SubscriberImpl<E>
   protected final O owner;
 
   public OwnedSubscriberImpl(
-      O owner,
-      Class<E> eventClass,
-      Consumer<E> handler
+      @NonNull O owner,
+      @NonNull Class<E> eventClass,
+      @NonNull Consumer<E> handler,
+      @Nullable PostOrder postOrder
   ) {
-    super(eventClass, handler);
+    super(eventClass, handler, postOrder);
     this.owner = owner;
   }
 
   public <H> OwnedSubscriberImpl(
-      O owner,
-      Class<E> eventClass,
-      PostOrder postOrder,
+      @NonNull O owner,
+      @NonNull Class<E> eventClass,
+      @NonNull PostOrder postOrder,
       boolean ignoreCancelled,
-      H handlerInstance,
-      BiConsumer<H, E> handler
+      @NonNull H handlerInstance,
+      @NonNull BiConsumer<H, E> handler
   ) {
     super(eventClass, postOrder, ignoreCancelled, handlerInstance, handler);
     this.owner = owner;

@@ -27,6 +27,7 @@ package org.geysermc.event.bus;
 
 import java.util.function.Consumer;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.geysermc.event.PostOrder;
 import org.geysermc.event.subscribe.Subscriber;
 
 public interface EventBus<E, S extends Subscriber<? extends E>> extends BaseBus<E, S> {
@@ -40,6 +41,12 @@ public interface EventBus<E, S extends Subscriber<? extends E>> extends BaseBus<
   @NonNull <T extends E, U extends Subscriber<T>> U subscribe(
       @NonNull Class<T> eventClass,
       @NonNull Consumer<T> consumer
+  );
+
+  @NonNull <T extends E, U extends Subscriber<T>> U subscribe(
+      @NonNull Class<T> eventClass,
+      @NonNull Consumer<T> consumer,
+      @NonNull PostOrder postOrder
   );
 
   void unregisterAll();

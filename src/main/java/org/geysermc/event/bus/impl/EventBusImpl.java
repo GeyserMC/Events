@@ -30,6 +30,8 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.geysermc.event.PostOrder;
 import org.geysermc.event.bus.EventBus;
 import org.geysermc.event.subscribe.Subscribe;
 import org.geysermc.event.subscribe.Subscriber;
@@ -39,15 +41,16 @@ public abstract class EventBusImpl<E, S extends Subscriber<? extends E>>
     implements EventBus<E, S> {
 
   protected abstract <H, T extends E, B extends Subscriber<T>> B makeSubscription(
-      Class<T> eventClass,
-      Subscribe subscribe,
-      H listener,
-      BiConsumer<H, T> handler
+      @NonNull Class<T> eventClass,
+      @NonNull Subscribe subscribe,
+      @NonNull H listener,
+      @NonNull BiConsumer<H, T> handler
   );
 
   protected abstract <T extends E, B extends Subscriber<T>> B makeSubscription(
-      Class<T> eventClass,
-      Consumer<T> handler
+      @NonNull Class<T> eventClass,
+      @NonNull Consumer<T> handler,
+      @Nullable PostOrder postOrder
   );
 
   @Override
@@ -63,12 +66,22 @@ public abstract class EventBusImpl<E, S extends Subscriber<? extends E>>
 
   @Override
   @NonNull
-  @SuppressWarnings("unchecked")
   public <T extends E, U extends Subscriber<T>> U subscribe(
       @NonNull Class<T> eventClass,
       @NonNull Consumer<T> consumer
   ) {
-    U subscription = makeSubscription(eventClass, consumer);
+    return subscribe(eventClass, consumer, PostOrder.NORMAL);
+  }
+
+  @Override
+  @NonNull
+  @SuppressWarnings("unchecked")
+  public <T extends E, U extends Subscriber<T>> U subscribe(
+      @NonNull Class<T> eventClass,
+      @NonNull Consumer<T> consumer,
+      @NonNull PostOrder postOrder
+  ) {
+    U subscription = makeSubscription(eventClass, consumer, postOrder);
     register(eventClass, (S) subscription);
     return subscription;
   }

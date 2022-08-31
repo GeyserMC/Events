@@ -33,6 +33,8 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.geysermc.event.PostOrder;
 import org.geysermc.event.bus.OwnedEventBus;
 import org.geysermc.event.subscribe.OwnedSubscriber;
 import org.geysermc.event.subscribe.Subscribe;
@@ -46,18 +48,29 @@ public abstract class OwnedEventBusImpl<O, E, S extends OwnedSubscriber<O, ? ext
       Multimaps.synchronizedSetMultimap(HashMultimap.create());
 
   protected abstract <L, T extends E, B extends OwnedSubscriber<O, T>> B makeSubscription(
-      O owner,
-      Class<T> eventClass,
-      Subscribe subscribe,
-      L listener,
-      BiConsumer<L, T> handler
+      @NonNull O owner,
+      @NonNull Class<T> eventClass,
+      @NonNull Subscribe subscribe,
+      @NonNull L listener,
+      @NonNull BiConsumer<L, T> handler
   );
 
   protected abstract <T extends E, B extends OwnedSubscriber<O, T>> B makeSubscription(
-      O owner,
-      Class<T> eventClass,
-      Consumer<T> handler
+      @NonNull O owner,
+      @NonNull Class<T> eventClass,
+      @NonNull Consumer<T> handler,
+      @Nullable PostOrder postOrder
   );
+
+  @Override
+  @NonNull
+  public <T extends E, U extends OwnedSubscriber<O, T>> U subscribe(
+      @NonNull O owner,
+      @NonNull Class<T> eventClass,
+      @NonNull Consumer<T> handler
+  ) {
+    return subscribe(owner, eventClass, handler, PostOrder.NORMAL);
+  }
 
   @Override
   @NonNull
@@ -65,10 +78,11 @@ public abstract class OwnedEventBusImpl<O, E, S extends OwnedSubscriber<O, ? ext
   public <T extends E, U extends OwnedSubscriber<O, T>> U subscribe(
       @NonNull O owner,
       @NonNull Class<T> eventClass,
-      @NonNull Consumer<T> handler
+      @NonNull Consumer<T> handler,
+      @NonNull PostOrder postOrder
   ) {
     OwnedSubscriber<O, T> subscription =
-        makeSubscription(owner, eventClass, handler);
+        makeSubscription(owner, eventClass, handler, postOrder);
 
     synchronized (ownedSubscribers) {
       if (ownedSubscribers.put(owner, subscription)) {

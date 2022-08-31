@@ -35,6 +35,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.geysermc.event.Cancellable;
 import org.geysermc.event.Event;
 import org.geysermc.event.PostOrder;
@@ -299,10 +300,10 @@ public class EventBusTest {
     @Override
     @SuppressWarnings("unchecked")
     protected <L, T, B extends Subscriber<T>> B makeSubscription(
-        Class<T> eventClass,
-        Subscribe subscribe,
-        L listener,
-        BiConsumer<L, T> handler
+        @NonNull Class<T> eventClass,
+        @NonNull Subscribe subscribe,
+        @NonNull L listener,
+        @NonNull BiConsumer<L, T> handler
     ) {
       createdMethodSubscriptions++;
       return (B) new TestSubscriberImpl<>(
@@ -314,11 +315,12 @@ public class EventBusTest {
     @Override
     @SuppressWarnings("unchecked")
     protected <T, B extends Subscriber<T>> B makeSubscription(
-        Class<T> eventClass,
-        Consumer<T> handler
+        @NonNull Class<T> eventClass,
+        @NonNull Consumer<T> handler,
+        @Nullable PostOrder postOrder
     ) {
       createdConsumerSubscriptions++;
-      return (B) new TestSubscriberImpl<>(eventClass, handler);
+      return (B) new TestSubscriberImpl<>(eventClass, handler, postOrder);
     }
 
     @Override
@@ -331,8 +333,8 @@ public class EventBusTest {
   }
 
   static final class TestSubscriberImpl<E> extends SubscriberImpl<E> {
-    public TestSubscriberImpl(Class<E> eventClass, Consumer<E> handler) {
-      super(eventClass, handler);
+    public TestSubscriberImpl(Class<E> eventClass, Consumer<E> handler, PostOrder postOrder) {
+      super(eventClass, handler, postOrder);
     }
 
     public <H> TestSubscriberImpl(

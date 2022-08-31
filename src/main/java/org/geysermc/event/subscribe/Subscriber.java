@@ -39,13 +39,12 @@ public interface Subscriber<T> {
   /**
    * Returns the event class.
    */
-  @NonNull
-  Class<T> eventClass();
+  @NonNull Class<T> eventClass();
 
   /**
    * Returns the post order of this event subscription.
    */
-  PostOrder order();
+  @NonNull PostOrder order();
 
   /**
    * Returns if this subscription ignores cancelled events.
