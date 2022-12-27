@@ -30,6 +30,13 @@ import org.geysermc.event.Cancellable;
 public abstract class AbstractCancellable implements Cancellable {
   private boolean cancelled;
 
+  protected AbstractCancellable(boolean cancelled) {
+    this.cancelled = cancelled;
+  }
+
+  protected AbstractCancellable() {
+  }
+
   @Override
   public final boolean isCancelled() {
     return cancelled;
