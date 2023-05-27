@@ -25,9 +25,11 @@
 
 package org.geysermc.event.bus;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -37,12 +39,14 @@ import java.util.function.Consumer;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.geysermc.event.Cancellable;
 import org.geysermc.event.Event;
+import org.geysermc.event.FireResult;
 import org.geysermc.event.PostOrder;
 import org.geysermc.event.bus.impl.EventBusImpl;
 import org.geysermc.event.subscribe.Subscribe;
 import org.geysermc.event.subscribe.Subscriber;
 import org.geysermc.event.subscribe.impl.SubscriberImpl;
 import org.geysermc.event.util.AbstractCancellable;
+import org.geysermc.event.util.CombinedException;
 import org.geysermc.event.util.TriConsumer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -90,7 +94,7 @@ public class EventBusTest {
     TestEvent event = new TestEvent();
     assertEquals(1, TestEvent.createdInstances);
 
-    assertTrue(bus.fire(event));
+    assertDoesNotThrow(() -> bus.fire(event));
     assertEquals(1, TestEvent.createdInstances);
     assertEquals(1, handler.invokeCalls);
   }
@@ -101,7 +105,37 @@ public class EventBusTest {
       throw new RuntimeException();
     });
 
-    assertFalse(bus.fire(new TestEvent()));
+    assertThrows(CombinedException.class, () -> bus.fire(new TestEvent()));
+  }
+
+  @Test
+  public void callNormalEventSilently() {
+    CountConsumer<TestEvent> handler = new CountConsumer<>();
+
+    bus.subscribe(TestEvent.class, handler);
+    assertEquals(0, TestEvent.createdInstances);
+    assertEquals(0, handler.invokeCalls);
+
+    TestEvent event = new TestEvent();
+    assertEquals(1, TestEvent.createdInstances);
+
+    FireResult result = bus.fireSilently(event);
+    assertTrue(result.success());
+    assertTrue(result.exceptions().isEmpty());
+
+    assertEquals(1, TestEvent.createdInstances);
+    assertEquals(1, handler.invokeCalls);
+  }
+
+  @Test
+  public void callThrowEventSilently() {
+    bus.subscribe(TestEvent.class, event -> {
+      throw new RuntimeException();
+    });
+
+    FireResult result = bus.fireSilently(new TestEvent());
+    assertFalse(result.success());
+    assertEquals(1, result.exceptions().size());
   }
 
   @Test

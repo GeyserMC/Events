@@ -42,10 +42,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.geysermc.event.FireResult;
 import org.geysermc.event.bus.BaseBus;
 import org.geysermc.event.bus.impl.util.Utils;
 import org.geysermc.event.subscribe.Subscribe;
 import org.geysermc.event.subscribe.Subscriber;
+import org.geysermc.event.util.CombinedException;
 import org.geysermc.event.util.TriConsumer;
 import org.lanternpowered.lmbda.LambdaFactory;
 
@@ -175,21 +177,37 @@ abstract class BaseBusImpl<E, S extends Subscriber<? extends E>> implements Base
   }
 
   @Override
+  public void fire(@NonNull E event) {
+    FireResult result = fireSilently(event);
+    if (result.success()) {
+      return;
+    }
+
+    throw new CombinedException(
+        String.format(
+            "One or multiple event listeners for %s threw an exception!",
+            event.getClass().getSimpleName()
+        ),
+        result.exceptions()
+    );
+  }
+
+  @Override
   @SuppressWarnings({"rawtypes", "unchecked"})
-  public boolean fire(@NonNull E event) {
-    boolean successful = true;
+  public FireResult fireSilently(@NonNull E event) {
+    List<Throwable> thrown = new ArrayList<>();
 
     for (Subscriber subscriber : sortedSubscribers(event.getClass())) {
       if (Utils.shouldCallSubscriber(subscriber, event)) {
         try {
           subscriber.invoke(event);
         } catch (Throwable throwable) {
-          successful = false;
+          thrown.add(throwable);
         }
       }
     }
 
-    return successful;
+    return FireResult.resultFor(thrown);
   }
 
   @SuppressWarnings("unchecked")
