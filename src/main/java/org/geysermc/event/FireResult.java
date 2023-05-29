@@ -1,18 +1,18 @@
 package org.geysermc.event;
 
 import java.util.Collections;
-import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.common.value.qual.MinLen;
+import org.geysermc.event.subscribe.Subscriber;
 
 public class FireResult {
-  private static final FireResult OK = new FireResult(Collections.emptyList());
+  private static final FireResult OK = new FireResult(Collections.emptyMap());
 
-  private final List<Throwable> exceptions;
+  private final Map<Subscriber<?>, Throwable> exceptions;
 
-  private FireResult(List<Throwable> exceptions) {
-    this.exceptions = Collections.unmodifiableList(exceptions);
+  private FireResult(Map<Subscriber<?>, Throwable> exceptions) {
+    this.exceptions = Collections.unmodifiableMap(exceptions);
   }
 
   public static FireResult ok() {
@@ -23,19 +23,11 @@ public class FireResult {
     return exceptions.isEmpty();
   }
 
-  public List<Throwable> exceptions() {
+  public Map<Subscriber<?>, Throwable> exceptions() {
     return exceptions;
   }
 
-  public static FireResult failure(@NonNull @MinLen(1) List<Throwable> exceptions) {
-    Objects.requireNonNull(exceptions);
-    if (exceptions.size() == 0) {
-      throw new IllegalArgumentException("Failure requires at least one exception");
-    }
-    return new FireResult(exceptions);
-  }
-
-  public static FireResult resultFor(@NonNull List<Throwable> exceptions) {
+  public static FireResult resultFor(@NonNull Map<Subscriber<?>, Throwable> exceptions) {
     Objects.requireNonNull(exceptions);
     if (exceptions.isEmpty()) {
       return ok();

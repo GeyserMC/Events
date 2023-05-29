@@ -8,20 +8,21 @@ plugins {
 }
 
 group = "org.geysermc.event"
-version = "1.0-SNAPSHOT"
 
-repositories {
-  mavenCentral()
-}
+version = "1.1-SNAPSHOT"
+
+repositories { mavenCentral() }
 
 dependencies {
   implementation("com.google.guava", "guava", "17.0")
   implementation("org.lanternpowered", "lmbda", "2.0.0")
+  implementation("org.slf4j", "slf4j-api", "2.0.7")
 
   compileOnly("org.checkerframework", "checker-qual", "3.19.0")
 
   testImplementation("org.junit.jupiter", "junit-jupiter-api", "5.8.2")
   testRuntimeOnly("org.junit.jupiter", "junit-jupiter-engine", "5.8.2")
+  testRuntimeOnly("org.slf4j", "slf4j-simple", "2.0.7")
 }
 
 checkstyle {
@@ -39,13 +40,9 @@ checkstyle {
   configProps["severity"] = "error"
 }
 
-license {
-  newLine(true)
-}
+license { newLine(true) }
 
-tasks.getByName<Test>("test") {
-  useJUnitPlatform()
-}
+tasks.getByName<Test>("test") { useJUnitPlatform() }
 
 java {
   sourceCompatibility = JavaVersion.VERSION_1_8
@@ -54,8 +51,7 @@ java {
   withSourcesJar()
 }
 
-fun Project.isSnapshot(): Boolean =
-  version.toString().endsWith("-SNAPSHOT")
+fun Project.isSnapshot(): Boolean = version.toString().endsWith("-SNAPSHOT")
 
 publishing {
   publications {

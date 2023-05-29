@@ -29,7 +29,6 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -46,7 +45,6 @@ import org.geysermc.event.subscribe.Subscribe;
 import org.geysermc.event.subscribe.Subscriber;
 import org.geysermc.event.subscribe.impl.SubscriberImpl;
 import org.geysermc.event.util.AbstractCancellable;
-import org.geysermc.event.util.CombinedException;
 import org.geysermc.event.util.TriConsumer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -105,7 +103,8 @@ public class EventBusTest {
       throw new RuntimeException();
     });
 
-    assertThrows(CombinedException.class, () -> bus.fire(new TestEvent()));
+    //todo check whether error was shown in console
+    assertDoesNotThrow(() -> bus.fire(new TestEvent()));
   }
 
   @Test

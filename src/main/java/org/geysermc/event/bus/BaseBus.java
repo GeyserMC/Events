@@ -29,7 +29,6 @@ import java.util.Set;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.geysermc.event.FireResult;
 import org.geysermc.event.subscribe.Subscriber;
-import org.geysermc.event.util.CombinedException;
 
 public interface BaseBus<E, S extends Subscriber<? extends E>> {
   /**
@@ -40,12 +39,11 @@ public interface BaseBus<E, S extends Subscriber<? extends E>> {
   void unsubscribe(@NonNull S subscription);
 
   /**
-   * Fires the given event.
+   * Fires the given event and log all exceptions that occur while executing this event.
    *
    * @param event the event to fire
-   * @throws CombinedException when one or multiple listeners threw an exception
    */
-  void fire(@NonNull E event) throws CombinedException;
+  FireResult fire(@NonNull E event);
 
   /**
    * Fires the given event silently.

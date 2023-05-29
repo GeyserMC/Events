@@ -38,7 +38,9 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -47,18 +49,21 @@ import org.geysermc.event.bus.BaseBus;
 import org.geysermc.event.bus.impl.util.Utils;
 import org.geysermc.event.subscribe.Subscribe;
 import org.geysermc.event.subscribe.Subscriber;
-import org.geysermc.event.util.CombinedException;
 import org.geysermc.event.util.TriConsumer;
 import org.lanternpowered.lmbda.LambdaFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("UnstableApiUsage")
 abstract class BaseBusImpl<E, S extends Subscriber<? extends E>> implements BaseBus<E, S> {
   private static final MethodHandles.Lookup CALLER = MethodHandles.lookup();
 
-  private Class<? super E> eventType;
+  private final Logger logger = LoggerFactory.getLogger(getClass());
 
   private final SetMultimap<Class<?>, Subscriber<?>> subscribers =
       Multimaps.synchronizedSetMultimap(HashMultimap.create());
+
+  private Class<? super E> eventType;
 
   // adding and removing is all managed in sortedSubscribersCache
   private final SetMultimap<Subscriber<?>, Class<?>> subscriberCacheEntries =
@@ -177,32 +182,32 @@ abstract class BaseBusImpl<E, S extends Subscriber<? extends E>> implements Base
   }
 
   @Override
-  public void fire(@NonNull E event) {
+  public FireResult fire(@NonNull E event) {
     FireResult result = fireSilently(event);
-    if (result.success()) {
-      return;
+    if (!result.success()) {
+      result.exceptions().forEach((subscriber, throwable) -> {
+        logger.error(
+            "An exception occurred while executing event {} for subscriber {}",
+            event.getClass().getSimpleName(),
+            subscriber.getClass().getName(),
+            throwable
+        );
+      });
     }
-
-    throw new CombinedException(
-        String.format(
-            "One or multiple event listeners for %s threw an exception!",
-            event.getClass().getSimpleName()
-        ),
-        result.exceptions()
-    );
+    return result;
   }
 
   @Override
   @SuppressWarnings({"rawtypes", "unchecked"})
   public FireResult fireSilently(@NonNull E event) {
-    List<Throwable> thrown = new ArrayList<>();
+    Map<Subscriber<?>, Throwable> thrown = new HashMap<>();
 
     for (Subscriber subscriber : sortedSubscribers(event.getClass())) {
       if (Utils.shouldCallSubscriber(subscriber, event)) {
         try {
           subscriber.invoke(event);
         } catch (Throwable throwable) {
-          thrown.add(throwable);
+          thrown.put(subscriber, throwable);
         }
       }
     }
