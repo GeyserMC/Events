@@ -30,23 +30,17 @@ import org.geysermc.event.PostOrder;
 import org.geysermc.event.subscribe.Subscriber;
 
 public interface EventBus<E, S extends Subscriber<? extends E>> extends BaseBus<E, S> {
-  /**
-   * Registers events for the given listener.
-   *
-   * @param listener the listener
-   */
-  void register(@NonNull Object listener);
+    /**
+     * Registers events for the given listener.
+     *
+     * @param listener the listener
+     */
+    void register(@NonNull Object listener);
 
-  @NonNull <T extends E, U extends Subscriber<T>> U subscribe(
-      @NonNull Class<T> eventClass,
-      @NonNull Consumer<T> consumer
-  );
+    @NonNull <T extends E, U extends Subscriber<T>> U subscribe(@NonNull Class<T> eventClass, @NonNull Consumer<T> consumer);
 
-  @NonNull <T extends E, U extends Subscriber<T>> U subscribe(
-      @NonNull Class<T> eventClass,
-      @NonNull Consumer<T> consumer,
-      @NonNull PostOrder postOrder
-  );
+    @NonNull <T extends E, U extends Subscriber<T>> U subscribe(
+            @NonNull Class<T> eventClass, @NonNull Consumer<T> consumer, @NonNull PostOrder postOrder);
 
-  void unregisterAll();
+    void unregisterAll();
 }

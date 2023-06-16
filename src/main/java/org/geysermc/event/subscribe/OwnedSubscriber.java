@@ -27,10 +27,10 @@ package org.geysermc.event.subscribe;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 public interface OwnedSubscriber<O, T> extends Subscriber<T> {
-  /**
-   * Gets the instance that owns this event subscription.
-   *
-   * @return the instance that owns this subscription
-   */
-  @NonNull O owner();
+    /**
+     * Gets the instance that owns this event subscription.
+     *
+     * @return the instance that owns this subscription
+     */
+    @NonNull O owner();
 }

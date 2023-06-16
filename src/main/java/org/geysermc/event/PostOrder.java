@@ -28,25 +28,25 @@ package org.geysermc.event;
  * Represents in which order (and thus when) the subscriber is called.
  */
 public enum PostOrder {
-  /**
-   * Called first, before all other subscribers.
-   */
-  FIRST,
-  /**
-   * Called before the {@link #NORMAL normal} subscribers.
-   */
-  EARLY,
-  /**
-   * The normal (default) order. The subscription has no special priority.
-   */
-  NORMAL,
-  /**
-   * Called after {@link #NORMAL normal} (default) subscribers.
-   */
-  LATE,
-  /**
-   * Called last, after all other subscribers.
-   * Generally reserved for monitoring the outcome.
-   */
-  LAST
+    /**
+     * Called first, before all other subscribers.
+     */
+    FIRST,
+    /**
+     * Called before the {@link #NORMAL normal} subscribers.
+     */
+    EARLY,
+    /**
+     * The normal (default) order. The subscription has no special priority.
+     */
+    NORMAL,
+    /**
+     * Called after {@link #NORMAL normal} (default) subscribers.
+     */
+    LATE,
+    /**
+     * Called last, after all other subscribers.
+     * Generally reserved for monitoring the outcome.
+     */
+    LAST
 }

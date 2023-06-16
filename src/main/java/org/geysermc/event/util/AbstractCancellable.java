@@ -27,22 +27,21 @@ package org.geysermc.event.util;
 import org.geysermc.event.Cancellable;
 
 public abstract class AbstractCancellable implements Cancellable {
-  private boolean cancelled;
+    private boolean cancelled;
 
-  protected AbstractCancellable(boolean cancelled) {
-    this.cancelled = cancelled;
-  }
+    protected AbstractCancellable(boolean cancelled) {
+        this.cancelled = cancelled;
+    }
 
-  protected AbstractCancellable() {
-  }
+    protected AbstractCancellable() {}
 
-  @Override
-  public final boolean isCancelled() {
-    return cancelled;
-  }
+    @Override
+    public final boolean isCancelled() {
+        return cancelled;
+    }
 
-  @Override
-  public final void setCancelled(boolean cancelled) {
-    this.cancelled = cancelled;
-  }
+    @Override
+    public final void setCancelled(boolean cancelled) {
+        this.cancelled = cancelled;
+    }
 }

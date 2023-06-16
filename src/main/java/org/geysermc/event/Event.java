@@ -27,5 +27,4 @@ package org.geysermc.event;
 /**
  * Represents an event.
  */
-public interface Event {
-}
+public interface Event {}

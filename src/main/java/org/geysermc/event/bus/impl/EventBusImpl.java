@@ -34,64 +34,50 @@ import org.geysermc.event.bus.EventBus;
 import org.geysermc.event.subscribe.Subscribe;
 import org.geysermc.event.subscribe.Subscriber;
 
-public abstract class EventBusImpl<E, S extends Subscriber<? extends E>>
-    extends BaseBusImpl<E, S>
-    implements EventBus<E, S> {
+public abstract class EventBusImpl<E, S extends Subscriber<? extends E>> extends BaseBusImpl<E, S>
+        implements EventBus<E, S> {
 
-  protected abstract <H, T extends E, B extends Subscriber<T>> B makeSubscription(
-      @NonNull Class<T> eventClass,
-      @NonNull Subscribe subscribe,
-      @NonNull H listener,
-      @NonNull BiConsumer<H, T> handler
-  );
+    protected abstract <H, T extends E, B extends Subscriber<T>> B makeSubscription(
+            @NonNull Class<T> eventClass,
+            @NonNull Subscribe subscribe,
+            @NonNull H listener,
+            @NonNull BiConsumer<H, T> handler);
 
-  protected abstract <T extends E, B extends Subscriber<T>> B makeSubscription(
-      @NonNull Class<T> eventClass,
-      @NonNull Consumer<T> handler,
-      @NonNull PostOrder postOrder
-  );
+    protected abstract <T extends E, B extends Subscriber<T>> B makeSubscription(
+            @NonNull Class<T> eventClass, @NonNull Consumer<T> handler, @NonNull PostOrder postOrder);
 
-  @Override
-  @SuppressWarnings("unchecked")
-  public void register(@NonNull Object listener) {
-    findSubscriptions(listener, (eventType, subscribe, handler) -> {
-      S subscriber =
-          (S) makeSubscription(eventType, subscribe, listener, handler);
+    @Override
+    @SuppressWarnings("unchecked")
+    public void register(@NonNull Object listener) {
+        findSubscriptions(listener, (eventType, subscribe, handler) -> {
+            S subscriber = (S) makeSubscription(eventType, subscribe, listener, handler);
 
-      register(eventType, subscriber);
-    });
-  }
+            register(eventType, subscriber);
+        });
+    }
 
-  @Override
-  @NonNull
-  public <T extends E, U extends Subscriber<T>> U subscribe(
-      @NonNull Class<T> eventClass,
-      @NonNull Consumer<T> consumer
-  ) {
-    return subscribe(eventClass, consumer, PostOrder.NORMAL);
-  }
+    @Override
+    @NonNull public <T extends E, U extends Subscriber<T>> U subscribe(
+            @NonNull Class<T> eventClass, @NonNull Consumer<T> consumer) {
+        return subscribe(eventClass, consumer, PostOrder.NORMAL);
+    }
 
-  @Override
-  @NonNull
-  @SuppressWarnings("unchecked")
-  public <T extends E, U extends Subscriber<T>> U subscribe(
-      @NonNull Class<T> eventClass,
-      @NonNull Consumer<T> consumer,
-      @NonNull PostOrder postOrder
-  ) {
-    U subscription = makeSubscription(eventClass, consumer, postOrder);
-    register(eventClass, (S) subscription);
-    return subscription;
-  }
+    @Override
+    @SuppressWarnings("unchecked")
+    public @NonNull <T extends E, U extends Subscriber<T>> U subscribe(
+            @NonNull Class<T> eventClass, @NonNull Consumer<T> consumer, @NonNull PostOrder postOrder) {
+        U subscription = makeSubscription(eventClass, consumer, postOrder);
+        register(eventClass, (S) subscription);
+        return subscription;
+    }
 
-  @Override
-  public void unregisterAll() {
-    super.unsubscribeAll();
-  }
+    @Override
+    public void unregisterAll() {
+        super.unsubscribeAll();
+    }
 
-  @Override
-  @NonNull
-  public <T extends E> Set<? extends Subscriber<T>> subscribers(@NonNull Class<T> eventClass) {
-    return Collections.unmodifiableSet(eventSubscribers(eventClass));
-  }
+    @Override
+    @NonNull public <T extends E> Set<? extends Subscriber<T>> subscribers(@NonNull Class<T> eventClass) {
+        return Collections.unmodifiableSet(eventSubscribers(eventClass));
+    }
 }

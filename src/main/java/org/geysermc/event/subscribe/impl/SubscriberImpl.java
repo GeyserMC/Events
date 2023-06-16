@@ -31,53 +31,47 @@ import org.geysermc.event.PostOrder;
 import org.geysermc.event.subscribe.Subscriber;
 
 public abstract class SubscriberImpl<E> implements Subscriber<E> {
-  protected final Class<E> eventClass;
-  protected final PostOrder postOrder;
-  protected final boolean ignoreCancelled;
-  protected final Consumer<E> handler;
+    protected final Class<E> eventClass;
+    protected final PostOrder postOrder;
+    protected final boolean ignoreCancelled;
+    protected final Consumer<E> handler;
 
-  public SubscriberImpl(
-      @NonNull Class<E> eventClass,
-      @NonNull Consumer<E> handler,
-      @NonNull PostOrder postOrder
-  ) {
-    this.eventClass = eventClass;
-    this.postOrder = postOrder;
-    this.ignoreCancelled = false;
-    this.handler = handler;
-  }
+    public SubscriberImpl(@NonNull Class<E> eventClass, @NonNull Consumer<E> handler, @NonNull PostOrder postOrder) {
+        this.eventClass = eventClass;
+        this.postOrder = postOrder;
+        this.ignoreCancelled = false;
+        this.handler = handler;
+    }
 
-  public <H> SubscriberImpl(
-      Class<E> eventClass,
-      PostOrder postOrder,
-      boolean ignoreCancelled,
-      H handlerInstance,
-      BiConsumer<H, E> handler
-  ) {
-    this.eventClass = eventClass;
-    this.postOrder = postOrder;
-    this.ignoreCancelled = ignoreCancelled;
-    this.handler = (event) -> handler.accept(handlerInstance, event);
-  }
+    public <H> SubscriberImpl(
+            Class<E> eventClass,
+            PostOrder postOrder,
+            boolean ignoreCancelled,
+            H handlerInstance,
+            BiConsumer<H, E> handler) {
+        this.eventClass = eventClass;
+        this.postOrder = postOrder;
+        this.ignoreCancelled = ignoreCancelled;
+        this.handler = (event) -> handler.accept(handlerInstance, event);
+    }
 
+    @Override
+    public @NonNull Class<E> eventClass() {
+        return eventClass;
+    }
 
-  @Override
-  public @NonNull Class<E> eventClass() {
-    return eventClass;
-  }
+    @Override
+    public @NonNull PostOrder order() {
+        return postOrder;
+    }
 
-  @Override
-  public @NonNull PostOrder order() {
-    return postOrder;
-  }
+    @Override
+    public boolean ignoreCancelled() {
+        return ignoreCancelled;
+    }
 
-  @Override
-  public boolean ignoreCancelled() {
-    return ignoreCancelled;
-  }
-
-  @Override
-  public void invoke(@NonNull E event) throws Throwable {
-    handler.accept(event);
-  }
+    @Override
+    public void invoke(@NonNull E event) throws Throwable {
+        handler.accept(event);
+    }
 }

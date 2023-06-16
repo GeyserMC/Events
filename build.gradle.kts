@@ -2,7 +2,6 @@ plugins {
   id("java")
   id("net.kyori.indra.licenser.spotless") version "3.1.1"
   id("net.kyori.indra.publishing") version "3.1.1"
-  checkstyle
   `java-library`
   `maven-publish`
 }
@@ -25,21 +24,6 @@ dependencies {
   testRuntimeOnly("org.slf4j", "slf4j-simple", "2.0.7")
 }
 
-checkstyle {
-  toolVersion = "10.3.2"
-  maxErrors = 0
-  maxWarnings = 0
-
-  // wanted to include indra's checkstyle,
-  // but wasn't able to set the tool version without having to use the base indra plugin
-  val checkstyleDir = rootProject.projectDir.resolve(".checkstyle")
-  configDirectory.set(checkstyleDir)
-
-  val configProps = configProperties
-  configProps["configDirectory"] = checkstyleDir
-  configProps["severity"] = "error"
-}
-
 tasks.getByName<Test>("test") { useJUnitPlatform() }
 
 indra {
@@ -55,4 +39,11 @@ indra {
 
   publishSnapshotsTo("geysermc", "https://repo.opencollab.dev/maven-snapshots")
   publishReleasesTo("geysermc", "https://repo.opencollab.dev/maven-releases")
+}
+
+spotless {
+  java {
+    palantirJavaFormat()
+    formatAnnotations()
+  }
 }

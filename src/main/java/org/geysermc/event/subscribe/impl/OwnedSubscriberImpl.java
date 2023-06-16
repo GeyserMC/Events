@@ -30,35 +30,31 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.geysermc.event.PostOrder;
 import org.geysermc.event.subscribe.OwnedSubscriber;
 
-public abstract class OwnedSubscriberImpl<O, E> extends SubscriberImpl<E>
-    implements OwnedSubscriber<O, E> {
+public abstract class OwnedSubscriberImpl<O, E> extends SubscriberImpl<E> implements OwnedSubscriber<O, E> {
+    protected final O owner;
 
-  protected final O owner;
+    public OwnedSubscriberImpl(
+            @NonNull O owner,
+            @NonNull Class<E> eventClass,
+            @NonNull Consumer<E> handler,
+            @NonNull PostOrder postOrder) {
+        super(eventClass, handler, postOrder);
+        this.owner = owner;
+    }
 
-  public OwnedSubscriberImpl(
-      @NonNull O owner,
-      @NonNull Class<E> eventClass,
-      @NonNull Consumer<E> handler,
-      @NonNull PostOrder postOrder
-  ) {
-    super(eventClass, handler, postOrder);
-    this.owner = owner;
-  }
+    public <H> OwnedSubscriberImpl(
+            @NonNull O owner,
+            @NonNull Class<E> eventClass,
+            @NonNull PostOrder postOrder,
+            boolean ignoreCancelled,
+            @NonNull H handlerInstance,
+            @NonNull BiConsumer<H, E> handler) {
+        super(eventClass, postOrder, ignoreCancelled, handlerInstance, handler);
+        this.owner = owner;
+    }
 
-  public <H> OwnedSubscriberImpl(
-      @NonNull O owner,
-      @NonNull Class<E> eventClass,
-      @NonNull PostOrder postOrder,
-      boolean ignoreCancelled,
-      @NonNull H handlerInstance,
-      @NonNull BiConsumer<H, E> handler
-  ) {
-    super(eventClass, postOrder, ignoreCancelled, handlerInstance, handler);
-    this.owner = owner;
-  }
-
-  @Override
-  public @NonNull O owner() {
-    return owner;
-  }
+    @Override
+    public @NonNull O owner() {
+        return owner;
+    }
 }

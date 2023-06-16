@@ -31,64 +31,58 @@ import org.geysermc.event.PostOrder;
 import org.geysermc.event.subscribe.OwnedSubscriber;
 import org.geysermc.event.subscribe.Subscriber;
 
-public interface OwnedEventBus<O, E, S extends OwnedSubscriber<O, ? extends E>>
-    extends BaseBus<E, S> {
-  /**
-   * Subscribes to the given event see {@link Subscriber}.
-   * <p>
-   * The difference between this method and
-   * is that this method takes in an extension parameter which allows for
-   * the event to be unsubscribed upon extension disable and reloads.
-   *
-   * @param owner      the extension to subscribe the event to
-   * @param eventClass the class of the event
-   * @param consumer   the consumer for handling the event
-   * @param <T>        the event class
-   * @return the event subscription
-   */
-  @NonNull <T extends E, U extends OwnedSubscriber<O, T>> U subscribe(
-      @NonNull O owner,
-      @NonNull Class<T> eventClass,
-      @NonNull Consumer<T> consumer
-  );
+public interface OwnedEventBus<O, E, S extends OwnedSubscriber<O, ? extends E>> extends BaseBus<E, S> {
+    /**
+     * Subscribes to the given event see {@link Subscriber}.
+     * <p>
+     * The difference between this method and
+     * is that this method takes in an extension parameter which allows for
+     * the event to be unsubscribed upon extension disable and reloads.
+     *
+     * @param owner      the extension to subscribe the event to
+     * @param eventClass the class of the event
+     * @param consumer   the consumer for handling the event
+     * @param <T>        the event class
+     * @return the event subscription
+     */
+    @NonNull <T extends E, U extends OwnedSubscriber<O, T>> U subscribe(
+            @NonNull O owner, @NonNull Class<T> eventClass, @NonNull Consumer<T> consumer);
 
-  /**
-   * Subscribes to the given event see {@link Subscriber}.
-   * <p>
-   * The difference between this method and
-   * is that this method takes in an extension parameter which allows for
-   * the event to be unsubscribed upon extension disable and reloads.
-   *
-   * @param owner      the extension to subscribe the event to
-   * @param eventClass the class of the event
-   * @param consumer   the consumer for handling the event
-   * @param <T>        the event class
-   * @param postOrder  the order of the subscriber
-   * @return the event subscription
-   */
-  @NonNull <T extends E, U extends OwnedSubscriber<O, T>> U subscribe(
-      @NonNull O owner,
-      @NonNull Class<T> eventClass,
-      @NonNull Consumer<T> consumer,
-      @NonNull PostOrder postOrder
-  );
+    /**
+     * Subscribes to the given event see {@link Subscriber}.
+     * <p>
+     * The difference between this method and
+     * is that this method takes in an extension parameter which allows for
+     * the event to be unsubscribed upon extension disable and reloads.
+     *
+     * @param owner      the extension to subscribe the event to
+     * @param eventClass the class of the event
+     * @param consumer   the consumer for handling the event
+     * @param <T>        the event class
+     * @param postOrder  the order of the subscriber
+     * @return the event subscription
+     */
+    @NonNull <T extends E, U extends OwnedSubscriber<O, T>> U subscribe(
+            @NonNull O owner,
+            @NonNull Class<T> eventClass,
+            @NonNull Consumer<T> consumer,
+            @NonNull PostOrder postOrder);
 
-  /**
-   * Registers events for the given listener.
-   *
-   * @param owner    the extension registering the event
-   * @param listener the listener
-   */
-  void register(@NonNull O owner, @NonNull Object listener);
+    /**
+     * Registers events for the given listener.
+     *
+     * @param owner    the extension registering the event
+     * @param listener the listener
+     */
+    void register(@NonNull O owner, @NonNull Object listener);
 
-  /**
-   * Unregisters all events from a given owner.
-   *
-   * @param owner the extension
-   */
-  void unregisterAll(@NonNull O owner);
+    /**
+     * Unregisters all events from a given owner.
+     *
+     * @param owner the extension
+     */
+    void unregisterAll(@NonNull O owner);
 
-  @Override
-  @NonNull
-  <T extends E> Set<? extends OwnedSubscriber<O, T>> subscribers(@NonNull Class<T> eventClass);
+    @Override
+    @NonNull <T extends E> Set<? extends OwnedSubscriber<O, T>> subscribers(@NonNull Class<T> eventClass);
 }

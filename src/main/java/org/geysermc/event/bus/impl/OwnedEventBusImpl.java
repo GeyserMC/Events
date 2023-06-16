@@ -38,80 +38,63 @@ import org.geysermc.event.subscribe.OwnedSubscriber;
 import org.geysermc.event.subscribe.Subscribe;
 import org.geysermc.event.subscribe.Subscriber;
 
-public abstract class OwnedEventBusImpl<O, E, S extends OwnedSubscriber<O, ? extends E>>
-    extends BaseBusImpl<E, S>
-    implements OwnedEventBus<O, E, S> {
+public abstract class OwnedEventBusImpl<O, E, S extends OwnedSubscriber<O, ? extends E>> extends BaseBusImpl<E, S>
+        implements OwnedEventBus<O, E, S> {
 
-  private final SetMultimap<O, Subscriber<?>> ownedSubscribers =
-      Multimaps.synchronizedSetMultimap(HashMultimap.create());
+    private final SetMultimap<O, Subscriber<?>> ownedSubscribers =
+            Multimaps.synchronizedSetMultimap(HashMultimap.create());
 
-  protected abstract <L, T extends E, B extends OwnedSubscriber<O, T>> B makeSubscription(
-      @NonNull O owner,
-      @NonNull Class<T> eventClass,
-      @NonNull Subscribe subscribe,
-      @NonNull L listener,
-      @NonNull BiConsumer<L, T> handler
-  );
+    protected abstract <L, T extends E, B extends OwnedSubscriber<O, T>> B makeSubscription(
+            @NonNull O owner,
+            @NonNull Class<T> eventClass,
+            @NonNull Subscribe subscribe,
+            @NonNull L listener,
+            @NonNull BiConsumer<L, T> handler);
 
-  protected abstract <T extends E, B extends OwnedSubscriber<O, T>> B makeSubscription(
-      @NonNull O owner,
-      @NonNull Class<T> eventClass,
-      @NonNull Consumer<T> handler,
-      @NonNull PostOrder postOrder
-  );
+    protected abstract <T extends E, B extends OwnedSubscriber<O, T>> B makeSubscription(
+            @NonNull O owner, @NonNull Class<T> eventClass, @NonNull Consumer<T> handler, @NonNull PostOrder postOrder);
 
-  @Override
-  @NonNull
-  public <T extends E, U extends OwnedSubscriber<O, T>> U subscribe(
-      @NonNull O owner,
-      @NonNull Class<T> eventClass,
-      @NonNull Consumer<T> handler
-  ) {
-    return subscribe(owner, eventClass, handler, PostOrder.NORMAL);
-  }
-
-  @Override
-  @NonNull
-  @SuppressWarnings("unchecked")
-  public <T extends E, U extends OwnedSubscriber<O, T>> U subscribe(
-      @NonNull O owner,
-      @NonNull Class<T> eventClass,
-      @NonNull Consumer<T> handler,
-      @NonNull PostOrder postOrder
-  ) {
-    OwnedSubscriber<O, T> subscription =
-        makeSubscription(owner, eventClass, handler, postOrder);
-
-    synchronized (ownedSubscribers) {
-      if (ownedSubscribers.put(owner, subscription)) {
-        register(eventClass, (S) subscription);
-      }
-      return (U) subscription;
+    @Override
+    @NonNull public <T extends E, U extends OwnedSubscriber<O, T>> U subscribe(
+            @NonNull O owner, @NonNull Class<T> eventClass, @NonNull Consumer<T> handler) {
+        return subscribe(owner, eventClass, handler, PostOrder.NORMAL);
     }
-  }
 
-  @Override
-  @SuppressWarnings("unchecked")
-  public void register(@NonNull O owner, @NonNull Object listener) {
-    findSubscriptions(listener, (eventClass, subscribe, handler) -> {
-      S subscriber =
-          (S) makeSubscription(owner, eventClass, subscribe, listener, handler);
+    @Override
+    @NonNull @SuppressWarnings("unchecked")
+    public <T extends E, U extends OwnedSubscriber<O, T>> U subscribe(
+            @NonNull O owner,
+            @NonNull Class<T> eventClass,
+            @NonNull Consumer<T> handler,
+            @NonNull PostOrder postOrder) {
+        OwnedSubscriber<O, T> subscription = makeSubscription(owner, eventClass, handler, postOrder);
 
-      register(eventClass, subscriber);
-      ownedSubscribers.put(owner, subscriber);
-    });
-  }
+        synchronized (ownedSubscribers) {
+            if (ownedSubscribers.put(owner, subscription)) {
+                register(eventClass, (S) subscription);
+            }
+            return (U) subscription;
+        }
+    }
 
-  @Override
-  public void unregisterAll(@NonNull O owner) {
-    unsubscribeMany(castGenericSet(ownedSubscribers.removeAll(owner)));
-  }
+    @Override
+    @SuppressWarnings("unchecked")
+    public void register(@NonNull O owner, @NonNull Object listener) {
+        findSubscriptions(listener, (eventClass, subscribe, handler) -> {
+            S subscriber = (S) makeSubscription(owner, eventClass, subscribe, listener, handler);
 
-  @Override
-  @NonNull
-  public <T extends E> Set<? extends OwnedSubscriber<O, T>> subscribers(
-      @NonNull Class<T> eventClass
-  ) {
-    return Collections.unmodifiableSet(eventSubscribers(eventClass));
-  }
+            register(eventClass, subscriber);
+            ownedSubscribers.put(owner, subscriber);
+        });
+    }
+
+    @Override
+    public void unregisterAll(@NonNull O owner) {
+        unsubscribeMany(castGenericSet(ownedSubscribers.removeAll(owner)));
+    }
+
+    @Override
+    @NonNull public <T extends E> Set<? extends OwnedSubscriber<O, T>> subscribers(@NonNull Class<T> eventClass) {
+        return Collections.unmodifiableSet(eventSubscribers(eventClass));
+    }
 }

@@ -35,25 +35,25 @@ import org.geysermc.event.PostOrder;
  * @param <T> the class of the event
  */
 public interface Subscriber<T> {
-  /**
-   * Returns the event class.
-   */
-  @NonNull Class<T> eventClass();
+    /**
+     * Returns the event class.
+     */
+    @NonNull Class<T> eventClass();
 
-  /**
-   * Returns the post order of this event subscription.
-   */
-  @NonNull PostOrder order();
+    /**
+     * Returns the post order of this event subscription.
+     */
+    @NonNull PostOrder order();
 
-  /**
-   * Returns if this subscription ignores cancelled events.
-   */
-  boolean ignoreCancelled();
+    /**
+     * Returns if this subscription ignores cancelled events.
+     */
+    boolean ignoreCancelled();
 
-  /**
-   * Invokes a given event.
-   *
-   * @param event the event to invoke
-   */
-  void invoke(@NonNull T event) throws Throwable;
+    /**
+     * Invokes a given event.
+     *
+     * @param event the event to invoke
+     */
+    void invoke(@NonNull T event) throws Throwable;
 }

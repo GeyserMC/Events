@@ -30,34 +30,34 @@ import org.geysermc.event.FireResult;
 import org.geysermc.event.subscribe.Subscriber;
 
 public interface BaseBus<E, S extends Subscriber<? extends E>> {
-  /**
-   * Unsubscribes the given {@link Subscriber}.
-   *
-   * @param subscription the event subscription
-   */
-  void unsubscribe(@NonNull S subscription);
+    /**
+     * Unsubscribes the given {@link Subscriber}.
+     *
+     * @param subscription the event subscription
+     */
+    void unsubscribe(@NonNull S subscription);
 
-  /**
-   * Fires the given event and log all exceptions that occur while executing this event.
-   *
-   * @param event the event to fire
-   */
-  FireResult fire(@NonNull E event);
+    /**
+     * Fires the given event and log all exceptions that occur while executing this event.
+     *
+     * @param event the event to fire
+     */
+    FireResult fire(@NonNull E event);
 
-  /**
-   * Fires the given event silently.
-   *
-   * @param event the event to fire
-   * @return the result of firing the given event
-   */
-  FireResult fireSilently(@NonNull E event);
+    /**
+     * Fires the given event silently.
+     *
+     * @param event the event to fire
+     * @return the result of firing the given event
+     */
+    FireResult fireSilently(@NonNull E event);
 
-  /**
-   * Gets the subscriptions for the given event class.
-   *
-   * @param eventClass the event class
-   * @param <T>        the value
-   * @return the subscriptions for the event class
-   */
-  @NonNull <T extends E> Set<? extends Subscriber<T>> subscribers(@NonNull Class<T> eventClass);
+    /**
+     * Gets the subscriptions for the given event class.
+     *
+     * @param eventClass the event class
+     * @param <T>        the value
+     * @return the subscriptions for the event class
+     */
+    @NonNull <T extends E> Set<? extends Subscriber<T>> subscribers(@NonNull Class<T> eventClass);
 }

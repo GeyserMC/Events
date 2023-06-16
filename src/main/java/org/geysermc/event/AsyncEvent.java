@@ -24,5 +24,4 @@
  */
 package org.geysermc.event;
 
-public interface AsyncEvent extends Event {
-}
+public interface AsyncEvent extends Event {}

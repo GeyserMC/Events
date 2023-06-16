@@ -38,13 +38,12 @@ import org.geysermc.event.PostOrder;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 public @interface Subscribe {
-  /**
-   * The {@link PostOrder} of the event
-   *
-   * @return the post order of the event
-   */
-  @NonNull
-  PostOrder postOrder() default PostOrder.NORMAL;
+    /**
+     * The {@link PostOrder} of the event
+     *
+     * @return the post order of the event
+     */
+    @NonNull PostOrder postOrder() default PostOrder.NORMAL;
 
-  boolean ignoreCancelled() default false;
+    boolean ignoreCancelled() default false;
 }
