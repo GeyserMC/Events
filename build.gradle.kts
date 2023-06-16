@@ -1,7 +1,8 @@
 plugins {
   id("java")
-  id("net.kyori.indra.licenser.spotless") version "3.1.1"
+  id("net.kyori.indra") version "3.1.1"
   id("net.kyori.indra.publishing") version "3.1.1"
+  id("net.kyori.indra.licenser.spotless") version "3.1.1"
   `java-library`
   `maven-publish`
 }
