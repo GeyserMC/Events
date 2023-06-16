@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 GeyserMC <https://geysermc.org>
+ * Copyright (c) 2022-2023 GeyserMC <https://geysermc.org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,7 +22,6 @@
  * @author GeyserMC
  * @link https://github.com/GeyserMC/Events
  */
-
 package org.geysermc.event.bus;
 
 import java.util.function.Consumer;
