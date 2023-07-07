@@ -71,10 +71,37 @@ public class EventBusTest {
     }
 
     @Test
-    public void unsubscribeToEvent() {
+    public void subscribeOneUnregisterOne() {
         TestSubscriberImpl<TestEvent> subscription = bus.subscribe(TestEvent.class, event -> {});
         assertEquals(1, bus.subscribers(TestEvent.class).size());
         bus.unsubscribe(subscription);
+        assertTrue(bus.subscribers(TestEvent.class).isEmpty());
+    }
+
+    @Test
+    public void subscribeTwoUnregisterOne() {
+        TestSubscriberImpl<TestEvent> subscription = bus.subscribe(TestEvent.class, event -> {});
+        bus.subscribe(TestEvent.class, event -> {});
+        assertEquals(2, bus.subscribers(TestEvent.class).size());
+        bus.unsubscribe(subscription);
+        assertEquals(1, bus.subscribers(TestEvent.class).size());
+    }
+
+    @Test
+    public void subscribeOneUnregisterOne2() {
+        var handler = new CountConsumer<TestEvent>();
+
+        TestSubscriberImpl<TestEvent> subscription = bus.subscribe(TestEvent.class, handler);
+        assertEquals(1, bus.subscribers(TestEvent.class).size());
+
+        // this causes sortedSubscribersCache to be initialized for the given event, which has to be invalidated after
+        bus.fireSilently(new TestEvent());
+        assertEquals(1, handler.invokeCalls);
+
+        bus.unsubscribe(subscription);
+
+        bus.fireSilently(new TestEvent());
+        assertEquals(1, handler.invokeCalls);
         assertTrue(bus.subscribers(TestEvent.class).isEmpty());
     }
 
@@ -143,6 +170,32 @@ public class EventBusTest {
         bus.findSubscriptions(listener, (eventClass, subscribe, consumer) -> methodsFound.incrementAndGet());
 
         assertEquals(4, methodsFound.get());
+    }
+
+    @Test
+    public void unregisterAll() {
+        var handler = new CountConsumer<TestEvent>();
+        var childHandler = new CountConsumer<TestChildEvent>();
+
+        assertTrue(bus.subscribers(TestEvent.class).isEmpty());
+        assertTrue(bus.subscribers(TestChildEvent.class).isEmpty());
+        bus.subscribe(TestEvent.class, handler);
+        bus.subscribe(TestChildEvent.class, childHandler);
+
+        assertEquals(1, bus.subscribers(TestEvent.class).size());
+        assertEquals(1, bus.subscribers(TestChildEvent.class).size());
+
+        bus.fireSilently(new TestChildEvent());
+        assertEquals(1, handler.invokeCalls);
+        assertEquals(1, childHandler.invokeCalls);
+
+        bus.unregisterAll();
+        assertTrue(bus.subscribers(TestEvent.class).isEmpty());
+        assertTrue(bus.subscribers(TestChildEvent.class).isEmpty());
+
+        bus.fireSilently(new TestChildEvent());
+        assertEquals(1, handler.invokeCalls);
+        assertEquals(1, childHandler.invokeCalls);
     }
 
     @Test

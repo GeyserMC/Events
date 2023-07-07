@@ -57,14 +57,14 @@ public abstract class EventBusImpl<E, S extends Subscriber<? extends E>> extends
     }
 
     @Override
-    @NonNull public <T extends E, U extends Subscriber<T>> U subscribe(
+    public <T extends E, U extends Subscriber<T>> @NonNull U subscribe(
             @NonNull Class<T> eventClass, @NonNull Consumer<T> consumer) {
         return subscribe(eventClass, consumer, PostOrder.NORMAL);
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public @NonNull <T extends E, U extends Subscriber<T>> U subscribe(
+    public <T extends E, U extends Subscriber<T>> @NonNull U subscribe(
             @NonNull Class<T> eventClass, @NonNull Consumer<T> consumer, @NonNull PostOrder postOrder) {
         U subscription = makeSubscription(eventClass, consumer, postOrder);
         register(eventClass, (S) subscription);
@@ -77,7 +77,7 @@ public abstract class EventBusImpl<E, S extends Subscriber<? extends E>> extends
     }
 
     @Override
-    @NonNull public <T extends E> Set<? extends Subscriber<T>> subscribers(@NonNull Class<T> eventClass) {
+    public <T extends E> @NonNull Set<? extends Subscriber<T>> subscribers(@NonNull Class<T> eventClass) {
         return Collections.unmodifiableSet(eventSubscribers(eventClass));
     }
 }

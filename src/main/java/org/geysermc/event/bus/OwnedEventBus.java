@@ -45,7 +45,7 @@ public interface OwnedEventBus<O, E, S extends OwnedSubscriber<O, ? extends E>> 
      * @param <T>        the event class
      * @return the event subscription
      */
-    @NonNull <T extends E, U extends OwnedSubscriber<O, T>> U subscribe(
+    <T extends E, U extends OwnedSubscriber<O, T>> @NonNull U subscribe(
             @NonNull O owner, @NonNull Class<T> eventClass, @NonNull Consumer<T> consumer);
 
     /**
@@ -62,7 +62,7 @@ public interface OwnedEventBus<O, E, S extends OwnedSubscriber<O, ? extends E>> 
      * @param postOrder  the order of the subscriber
      * @return the event subscription
      */
-    @NonNull <T extends E, U extends OwnedSubscriber<O, T>> U subscribe(
+    <T extends E, U extends OwnedSubscriber<O, T>> @NonNull U subscribe(
             @NonNull O owner,
             @NonNull Class<T> eventClass,
             @NonNull Consumer<T> consumer,
@@ -84,5 +84,5 @@ public interface OwnedEventBus<O, E, S extends OwnedSubscriber<O, ? extends E>> 
     void unregisterAll(@NonNull O owner);
 
     @Override
-    @NonNull <T extends E> Set<? extends OwnedSubscriber<O, T>> subscribers(@NonNull Class<T> eventClass);
+    <T extends E> @NonNull Set<? extends OwnedSubscriber<O, T>> subscribers(@NonNull Class<T> eventClass);
 }

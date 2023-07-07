@@ -24,25 +24,22 @@
  */
 package org.geysermc.event.bus.impl;
 
-import com.google.common.base.Preconditions;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimaps;
-import com.google.common.collect.SetMultimap;
-import com.google.common.reflect.TypeToken;
+import static io.leangen.geantyref.GenericTypeReflector.erase;
+
+import io.leangen.geantyref.TypeToken;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.geysermc.event.FireResult;
 import org.geysermc.event.bus.BaseBus;
 import org.geysermc.event.bus.impl.util.Utils;
@@ -53,63 +50,34 @@ import org.lanternpowered.lmbda.LambdaFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@SuppressWarnings("UnstableApiUsage")
 abstract class BaseBusImpl<E, S extends Subscriber<? extends E>> implements BaseBus<E, S> {
     private static final MethodHandles.Lookup CALLER = MethodHandles.lookup();
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private final SetMultimap<Class<?>, Subscriber<?>> subscribers =
-            Multimaps.synchronizedSetMultimap(HashMultimap.create());
+    private final Map<Class<?>, Set<Subscriber<?>>> subscribers = Collections.synchronizedMap(new HashMap<>());
+    private final Map<Class<?>, List<Subscriber<?>>> sortedSubscribersCache =
+            Collections.synchronizedMap(new HashMap<>());
 
-    private Class<? super E> eventType;
+    private final Class<?> baseEventType;
 
-    // adding and removing is all managed in sortedSubscribersCache
-    private final SetMultimap<Subscriber<?>, Class<?>> subscriberCacheEntries =
-            Multimaps.synchronizedSetMultimap(HashMultimap.create());
-
-    @SuppressWarnings("unchecked")
-    private final LoadingCache<Class<?>, List<Subscriber<?>>> sortedSubscribersCache = CacheBuilder.newBuilder()
-            .removalListener((listener) -> {
-                Class<?> eventClass = (Class<?>) listener.getKey();
-                List<Subscriber<?>> subscribers = (List<Subscriber<?>>) listener.getValue();
-                synchronized (subscriberCacheEntries) {
-                    for (Subscriber<?> subscriber : subscribers) {
-                        subscriberCacheEntries.remove(subscriber, eventClass);
-                    }
-                }
-            })
-            .build(CacheLoader.from(eventClass -> {
-                Set<Class<?>> ancestors = Utils.ancestorsThatUse(eventClass, eventType);
-
-                List<Subscriber<?>> sortedSubscribers = new ArrayList<>();
-                synchronized (subscribers) {
-                    for (Class<?> ancestor : ancestors) {
-                        sortedSubscribers.addAll(subscribers.get(ancestor));
-                    }
-                }
-                sortedSubscribers.sort(Comparator.comparingInt(s -> s.order().ordinal()));
-                sortedSubscribers = Collections.unmodifiableList(sortedSubscribers);
-
-                synchronized (subscriberCacheEntries) {
-                    for (Subscriber<?> subscriber : sortedSubscribers) {
-                        subscriberCacheEntries.put(subscriber, eventClass);
-                    }
-                }
-                return sortedSubscribers;
-            }));
-
-    @SuppressWarnings("UnstableApiUsage")
     public BaseBusImpl() {
-        eventType = new TypeToken<E>(getClass()) {}.getRawType();
+        baseEventType = erase(new TypeToken<E>() {}.getType());
     }
 
     protected <T extends E> void register(Class<T> eventClass, S subscriber) {
-        Preconditions.checkArgument(eventType.isAssignableFrom(eventClass));
-        Preconditions.checkArgument(subscriber.eventClass().isAssignableFrom(eventClass));
+        if (!baseEventType.isAssignableFrom(eventClass)) {
+            throw new IllegalArgumentException(
+                    "Event %s has to be assignable from %s".formatted(eventClass, baseEventType));
+        }
+        if (!subscriber.eventClass().isAssignableFrom(eventClass)) {
+            throw new IllegalArgumentException(String.format(
+                    "Tried to subscribe to %s with a subscriber that listens to %s, which is not assignable from %s",
+                    eventClass, subscriber.eventClass(), eventClass));
+        }
         synchronized (subscribers) {
-            subscribers.put(eventClass, subscriber);
-            sortedSubscribersCache.invalidate(eventClass);
+            subscribers.computeIfAbsent(eventClass, $ -> new HashSet<>()).add(subscriber);
+            sortedSubscribersCache.remove(eventClass);
         }
     }
 
@@ -131,7 +99,7 @@ abstract class BaseBusImpl<E, S extends Subscriber<? extends E>> implements Base
 
                 Class<?> firstParameterType = method.getParameters()[0].getType();
 
-                if (!eventType.isAssignableFrom(firstParameterType)) {
+                if (!baseEventType.isAssignableFrom(firstParameterType)) {
                     continue;
                 }
 
@@ -156,23 +124,29 @@ abstract class BaseBusImpl<E, S extends Subscriber<? extends E>> implements Base
         synchronized (subscribers) {
             // we can trust the subscription because the implementation that will be used is final.
             Class<? extends E> eventClass = subscription.eventClass();
-            if (!subscribers.remove(eventClass, subscription)) {
-                sortedSubscribersCache.invalidate(eventClass);
-            }
+
+            subscribers.computeIfPresent(eventClass, ($, value) -> {
+                value.remove(subscription);
+                if (value.isEmpty()) {
+                    return null;
+                }
+                return value;
+            });
+            sortedSubscribersCache.remove(eventClass);
         }
     }
 
     protected void unsubscribeMany(Iterable<S> subscriptions) {
-        for (S subscription : subscriptions) {
-            unsubscribe(subscription);
+        synchronized (subscribers) {
+            for (S subscription : subscriptions) {
+                unsubscribe(subscription);
+            }
         }
     }
 
     protected void unsubscribeAll() {
-        synchronized (subscribers) {
-            subscribers.clear();
-        }
-        sortedSubscribersCache.invalidateAll();
+        subscribers.clear();
+        sortedSubscribersCache.clear();
     }
 
     @Override
@@ -210,15 +184,30 @@ abstract class BaseBusImpl<E, S extends Subscriber<? extends E>> implements Base
 
     @SuppressWarnings("unchecked")
     protected List<S> sortedSubscribers(Class<?> eventClass) {
-        return (List<S>) sortedSubscribersCache.getUnchecked(eventClass);
+        var sortedSubscribers = (List<S>) sortedSubscribersCache.get(eventClass);
+        if (sortedSubscribers != null) {
+            return sortedSubscribers;
+        }
+
+        Set<Class<?>> ancestors = Utils.ancestorsThatUse(eventClass, baseEventType);
+
+        sortedSubscribers = new ArrayList<>();
+        synchronized (subscribers) {
+            for (Class<?> ancestor : ancestors) {
+                sortedSubscribers.addAll(castGenericNullableSet(subscribers.get(ancestor)));
+            }
+        }
+        sortedSubscribers.sort(Comparator.comparingInt(s -> s.order().ordinal()));
+        sortedSubscribers = Collections.unmodifiableList(sortedSubscribers);
+        return sortedSubscribers;
     }
 
     protected <T extends Subscriber<U>, U> Set<T> eventSubscribers(Class<U> eventType) {
-        return castGenericSet(subscribers.get(eventType));
+        return castGenericNullableSet(subscribers.get(eventType));
     }
 
     @SuppressWarnings("unchecked")
-    protected static <T extends U, U> Set<T> castGenericSet(Set<U> o) {
-        return (Set<T>) o;
+    protected static <T extends U, U> Set<T> castGenericNullableSet(@Nullable Set<U> o) {
+        return o != null ? (Set<T>) o : Collections.emptySet();
     }
 }

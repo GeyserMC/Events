@@ -59,5 +59,5 @@ public interface BaseBus<E, S extends Subscriber<? extends E>> {
      * @param <T>        the value
      * @return the subscriptions for the event class
      */
-    @NonNull <T extends E> Set<? extends Subscriber<T>> subscribers(@NonNull Class<T> eventClass);
+    <T extends E> @NonNull Set<? extends Subscriber<T>> subscribers(@NonNull Class<T> eventClass);
 }

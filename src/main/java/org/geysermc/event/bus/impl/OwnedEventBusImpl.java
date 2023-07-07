@@ -24,10 +24,10 @@
  */
 package org.geysermc.event.bus.impl;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimaps;
-import com.google.common.collect.SetMultimap;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -41,8 +41,7 @@ import org.geysermc.event.subscribe.Subscriber;
 public abstract class OwnedEventBusImpl<O, E, S extends OwnedSubscriber<O, ? extends E>> extends BaseBusImpl<E, S>
         implements OwnedEventBus<O, E, S> {
 
-    private final SetMultimap<O, Subscriber<?>> ownedSubscribers =
-            Multimaps.synchronizedSetMultimap(HashMultimap.create());
+    private final Map<O, Set<Subscriber<?>>> ownedSubscribers = Collections.synchronizedMap(new HashMap<>());
 
     protected abstract <L, T extends E, B extends OwnedSubscriber<O, T>> B makeSubscription(
             @NonNull O owner,
@@ -55,14 +54,14 @@ public abstract class OwnedEventBusImpl<O, E, S extends OwnedSubscriber<O, ? ext
             @NonNull O owner, @NonNull Class<T> eventClass, @NonNull Consumer<T> handler, @NonNull PostOrder postOrder);
 
     @Override
-    @NonNull public <T extends E, U extends OwnedSubscriber<O, T>> U subscribe(
+    public <T extends E, U extends OwnedSubscriber<O, T>> @NonNull U subscribe(
             @NonNull O owner, @NonNull Class<T> eventClass, @NonNull Consumer<T> handler) {
         return subscribe(owner, eventClass, handler, PostOrder.NORMAL);
     }
 
     @Override
-    @NonNull @SuppressWarnings("unchecked")
-    public <T extends E, U extends OwnedSubscriber<O, T>> U subscribe(
+    @SuppressWarnings("unchecked")
+    public <T extends E, U extends OwnedSubscriber<O, T>> @NonNull U subscribe(
             @NonNull O owner,
             @NonNull Class<T> eventClass,
             @NonNull Consumer<T> handler,
@@ -70,7 +69,7 @@ public abstract class OwnedEventBusImpl<O, E, S extends OwnedSubscriber<O, ? ext
         OwnedSubscriber<O, T> subscription = makeSubscription(owner, eventClass, handler, postOrder);
 
         synchronized (ownedSubscribers) {
-            if (ownedSubscribers.put(owner, subscription)) {
+            if (ownedSubscribers.computeIfAbsent(owner, $ -> new HashSet<>()).add(subscription)) {
                 register(eventClass, (S) subscription);
             }
             return (U) subscription;
@@ -84,17 +83,21 @@ public abstract class OwnedEventBusImpl<O, E, S extends OwnedSubscriber<O, ? ext
             S subscriber = (S) makeSubscription(owner, eventClass, subscribe, listener, handler);
 
             register(eventClass, subscriber);
-            ownedSubscribers.put(owner, subscriber);
+            synchronized (ownedSubscribers) {
+                ownedSubscribers.computeIfAbsent(owner, $ -> new HashSet<>()).add(subscriber);
+            }
         });
     }
 
     @Override
     public void unregisterAll(@NonNull O owner) {
-        unsubscribeMany(castGenericSet(ownedSubscribers.removeAll(owner)));
+        synchronized (ownedSubscribers) {
+            unsubscribeMany(castGenericNullableSet(ownedSubscribers.remove(owner)));
+        }
     }
 
     @Override
-    @NonNull public <T extends E> Set<? extends OwnedSubscriber<O, T>> subscribers(@NonNull Class<T> eventClass) {
+    public <T extends E> @NonNull Set<? extends OwnedSubscriber<O, T>> subscribers(@NonNull Class<T> eventClass) {
         return Collections.unmodifiableSet(eventSubscribers(eventClass));
     }
 }

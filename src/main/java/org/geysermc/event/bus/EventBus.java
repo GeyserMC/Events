@@ -37,9 +37,10 @@ public interface EventBus<E, S extends Subscriber<? extends E>> extends BaseBus<
      */
     void register(@NonNull Object listener);
 
-    @NonNull <T extends E, U extends Subscriber<T>> U subscribe(@NonNull Class<T> eventClass, @NonNull Consumer<T> consumer);
+    <T extends E, U extends Subscriber<T>> @NonNull U subscribe(
+            @NonNull Class<T> eventClass, @NonNull Consumer<T> consumer);
 
-    @NonNull <T extends E, U extends Subscriber<T>> U subscribe(
+    <T extends E, U extends Subscriber<T>> @NonNull U subscribe(
             @NonNull Class<T> eventClass, @NonNull Consumer<T> consumer, @NonNull PostOrder postOrder);
 
     void unregisterAll();

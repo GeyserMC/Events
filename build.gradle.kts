@@ -1,20 +1,17 @@
 plugins {
-  id("java")
   id("net.kyori.indra") version "3.1.1"
   id("net.kyori.indra.publishing") version "3.1.1"
   id("net.kyori.indra.licenser.spotless") version "3.1.1"
-  `java-library`
-  `maven-publish`
 }
 
 group = "org.geysermc.event"
 
-version = "1.1-SNAPSHOT"
+version = "1.2-SNAPSHOT"
 
 repositories { mavenCentral() }
 
 dependencies {
-  implementation("com.google.guava", "guava", "17.0")
+  implementation("io.leangen.geantyref", "geantyref", "1.3.13")
   implementation("org.lanternpowered", "lmbda", "2.0.0")
   implementation("org.slf4j", "slf4j-api", "2.0.7")
 
@@ -36,7 +33,7 @@ indra {
 
   mitLicense()
 
-  javaVersions { target(8) }
+  javaVersions { target(17) }
 
   publishSnapshotsTo("geysermc", "https://repo.opencollab.dev/maven-snapshots")
   publishReleasesTo("geysermc", "https://repo.opencollab.dev/maven-releases")
