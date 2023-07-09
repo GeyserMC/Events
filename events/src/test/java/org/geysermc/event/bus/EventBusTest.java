@@ -31,47 +31,44 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.geysermc.event.Cancellable;
+import org.geysermc.event.Counter;
 import org.geysermc.event.Event;
 import org.geysermc.event.FireResult;
 import org.geysermc.event.PostOrder;
-import org.geysermc.event.bus.impl.EventBusImpl;
+import org.geysermc.event.TestChildEvent;
+import org.geysermc.event.TestEvent;
 import org.geysermc.event.subscribe.Subscribe;
-import org.geysermc.event.subscribe.Subscriber;
-import org.geysermc.event.subscribe.impl.SubscriberImpl;
+import org.geysermc.event.subscribe.TestSubscriberImpl;
 import org.geysermc.event.util.AbstractCancellable;
-import org.geysermc.event.util.TriConsumer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class EventBusTest {
+class EventBusTest {
     private TestBusImpl bus;
 
     @BeforeEach
-    public void setupBus() {
+    void setupBus() {
         bus = new TestBusImpl();
     }
 
     @AfterEach
-    public void resetStuff() {
-        TestEvent.createdInstances = 0;
+    void resetStuff() {
+        Counter.reset();
     }
 
     @Test
-    public void subscribeToEvent() {
+    void subscribeToEvent() {
         assertTrue(bus.subscribers(TestEvent.class).isEmpty());
         bus.subscribe(TestEvent.class, event -> {});
-        assertEquals(1, bus.createdConsumerSubscriptions);
+        assertEquals(1, Counter.byId("createdConsumerSubscriptions"));
         assertEquals(1, bus.subscribers(TestEvent.class).size());
     }
 
     @Test
-    public void subscribeOneUnregisterOne() {
+    void subscribeOneUnregisterOne() {
         TestSubscriberImpl<TestEvent> subscription = bus.subscribe(TestEvent.class, event -> {});
         assertEquals(1, bus.subscribers(TestEvent.class).size());
         bus.unsubscribe(subscription);
@@ -79,7 +76,7 @@ public class EventBusTest {
     }
 
     @Test
-    public void subscribeTwoUnregisterOne() {
+    void subscribeTwoUnregisterOne() {
         TestSubscriberImpl<TestEvent> subscription = bus.subscribe(TestEvent.class, event -> {});
         bus.subscribe(TestEvent.class, event -> {});
         assertEquals(2, bus.subscribers(TestEvent.class).size());
@@ -88,7 +85,7 @@ public class EventBusTest {
     }
 
     @Test
-    public void subscribeOneUnregisterOne2() {
+    void subscribeOneUnregisterOne2() {
         var handler = new CountConsumer<TestEvent>();
 
         TestSubscriberImpl<TestEvent> subscription = bus.subscribe(TestEvent.class, handler);
@@ -106,23 +103,23 @@ public class EventBusTest {
     }
 
     @Test
-    public void callNormalEvent() {
+    void callNormalEvent() {
         CountConsumer<TestEvent> handler = new CountConsumer<>();
 
         bus.subscribe(TestEvent.class, handler);
-        assertEquals(0, TestEvent.createdInstances);
+        assertEquals(0, Counter.byId("createdInstances"));
         assertEquals(0, handler.invokeCalls);
 
         TestEvent event = new TestEvent();
-        assertEquals(1, TestEvent.createdInstances);
+        assertEquals(1, Counter.byId("createdInstances"));
 
         assertDoesNotThrow(() -> bus.fire(event));
-        assertEquals(1, TestEvent.createdInstances);
+        assertEquals(1, Counter.byId("createdInstances"));
         assertEquals(1, handler.invokeCalls);
     }
 
     @Test
-    public void callThrowEvent() {
+    void callThrowEvent() {
         bus.subscribe(TestEvent.class, event -> {
             throw new RuntimeException();
         });
@@ -132,26 +129,26 @@ public class EventBusTest {
     }
 
     @Test
-    public void callNormalEventSilently() {
+    void callNormalEventSilently() {
         CountConsumer<TestEvent> handler = new CountConsumer<>();
 
         bus.subscribe(TestEvent.class, handler);
-        assertEquals(0, TestEvent.createdInstances);
+        assertEquals(0, Counter.byId("createdInstances"));
         assertEquals(0, handler.invokeCalls);
 
         TestEvent event = new TestEvent();
-        assertEquals(1, TestEvent.createdInstances);
+        assertEquals(1, Counter.byId("createdInstances"));
 
         FireResult result = bus.fireSilently(event);
         assertTrue(result.success());
         assertTrue(result.exceptions().isEmpty());
 
-        assertEquals(1, TestEvent.createdInstances);
+        assertEquals(1, Counter.byId("createdInstances"));
         assertEquals(1, handler.invokeCalls);
     }
 
     @Test
-    public void callThrowEventSilently() {
+    void callThrowEventSilently() {
         bus.subscribe(TestEvent.class, event -> {
             throw new RuntimeException();
         });
@@ -162,18 +159,7 @@ public class EventBusTest {
     }
 
     @Test
-    public void findSubscribersInListener() {
-        TestEventListener listener = new TestEventListener();
-
-        AtomicInteger methodsFound = new AtomicInteger();
-
-        bus.findSubscriptions(listener, (eventClass, subscribe, consumer) -> methodsFound.incrementAndGet());
-
-        assertEquals(4, methodsFound.get());
-    }
-
-    @Test
-    public void unregisterAll() {
+    void unregisterAll() {
         var handler = new CountConsumer<TestEvent>();
         var childHandler = new CountConsumer<TestChildEvent>();
 
@@ -199,66 +185,28 @@ public class EventBusTest {
     }
 
     @Test
-    public void registeredSubscribersCallCount() {
-        TestEventListener listener = new TestEventListener();
-
-        bus.register(listener);
-        assertEquals(4, bus.createdMethodSubscriptions);
-
-        bus.fire(new TestEvent());
-        assertEquals(1, listener.publicEventInvokeCount);
-        assertEquals(1, listener.privateEventInvokeCount);
-        assertEquals(0, listener.baseEventInvokeCount);
-        assertEquals(0, listener.childEventInvokeCount);
-        listener.resetCounts();
-
-        bus.fire(new TestChildEvent());
-        assertEquals(1, listener.publicEventInvokeCount);
-        assertEquals(1, listener.privateEventInvokeCount);
-        assertEquals(0, listener.baseEventInvokeCount);
-        assertEquals(1, listener.childEventInvokeCount);
-        listener.resetCounts();
-
-        bus.fire(new Object());
-        assertEquals(0, listener.publicEventInvokeCount);
-        assertEquals(0, listener.privateEventInvokeCount);
-        assertEquals(0, listener.baseEventInvokeCount);
-        assertEquals(0, listener.childEventInvokeCount);
-    }
-
-    @Test
-    public void registeredSubscribersCallOrder() {
+    void registeredSubscribersCallOrder() {
         TestEventListenerOrder listener = new TestEventListenerOrder();
 
         bus.register(listener);
-        assertEquals(5, bus.createdMethodSubscriptions);
+        assertEquals(5, Counter.byId("createdMethodSubscriptions"));
 
         bus.fire(new TestEvent());
         assertEquals(PostOrder.LAST, listener.lastCalled);
     }
 
     @Test
-    public void registeredSubscribersIgnoreCancelled() {
+    void registeredSubscribersIgnoreCancelled() {
         TestCancelledEventListener listener = new TestCancelledEventListener();
 
         bus.register(listener);
-        assertEquals(4, bus.createdMethodSubscriptions);
+        assertEquals(4, Counter.byId("createdMethodSubscriptions"));
 
         Cancellable event = new TestCancellableEvent();
         bus.fire(event);
         assertTrue(event.isCancelled());
-        assertEquals(3, listener.callCount);
+        assertEquals(3, Counter.byId("callCount"));
     }
-
-    static class TestEvent implements Event {
-        static int createdInstances = 0;
-
-        TestEvent() {
-            createdInstances++;
-        }
-    }
-
-    static final class TestChildEvent extends TestEvent {}
 
     static final class CountConsumer<E extends Event> implements Consumer<E> {
         int invokeCalls = 0;
@@ -269,69 +217,35 @@ public class EventBusTest {
         }
     }
 
-    static final class TestEventListener {
-        int publicEventInvokeCount = 0;
-        int privateEventInvokeCount = 0;
-        int baseEventInvokeCount = 0;
-        int childEventInvokeCount = 0;
-
-        @Subscribe
-        public void publicEvent(TestEvent event) {
-            publicEventInvokeCount++;
-        }
-
-        @Subscribe
-        private void privateEvent(TestEvent event) {
-            privateEventInvokeCount++;
-        }
-
-        @Subscribe
-        public void baseEvent(Object event) {
-            baseEventInvokeCount++;
-        }
-
-        @Subscribe
-        public void childEvent(TestChildEvent event) {
-            childEventInvokeCount++;
-        }
-
-        public void resetCounts() {
-            publicEventInvokeCount = 0;
-            privateEventInvokeCount = 0;
-            baseEventInvokeCount = 0;
-            childEventInvokeCount = 0;
-        }
-    }
-
     static final class TestEventListenerOrder {
         private PostOrder lastCalled = null;
 
         @Subscribe(postOrder = PostOrder.FIRST)
-        public void shouldCallFirst(TestEvent event) {
+        void shouldCallFirst(TestEvent event) {
             assertNull(lastCalled);
             lastCalled = PostOrder.FIRST;
         }
 
         @Subscribe(postOrder = PostOrder.EARLY)
-        public void shouldCallEarly(TestEvent event) {
+        void shouldCallEarly(TestEvent event) {
             assertEquals(PostOrder.FIRST, lastCalled);
             lastCalled = PostOrder.EARLY;
         }
 
         @Subscribe
-        public void shouldCallNormal(TestEvent event) {
+        void shouldCallNormal(TestEvent event) {
             assertEquals(PostOrder.EARLY, lastCalled);
             lastCalled = PostOrder.NORMAL;
         }
 
         @Subscribe(postOrder = PostOrder.LATE)
-        public void shouldCallLate(TestEvent event) {
+        void shouldCallLate(TestEvent event) {
             assertEquals(PostOrder.NORMAL, lastCalled);
             lastCalled = PostOrder.LATE;
         }
 
         @Subscribe(postOrder = PostOrder.LAST)
-        public void shouldCallLast(TestEvent event) {
+        void shouldCallLast(TestEvent event) {
             assertEquals(PostOrder.LATE, lastCalled);
             lastCalled = PostOrder.LAST;
         }
@@ -340,78 +254,30 @@ public class EventBusTest {
     static final class TestCancellableEvent extends AbstractCancellable {}
 
     static final class TestCancelledEventListener {
-        int callCount;
-
         @Subscribe(postOrder = PostOrder.FIRST)
-        public void firstCancelEvent(TestCancellableEvent event) {
-            callCount++;
+        void firstCancelEvent(TestCancellableEvent event) {
+            Counter.increment("callCount");
             assertFalse(event.isCancelled());
             event.setCancelled(true);
         }
 
         @Subscribe(postOrder = PostOrder.EARLY)
-        public void earlyShouldIgnore(TestCancellableEvent event) {
+        void earlyShouldIgnore(TestCancellableEvent event) {
             fail("Event should be cancelled");
         }
 
         @Subscribe(ignoreCancelled = true)
-        public void normalDeCancelEvent(TestCancellableEvent event) {
-            callCount++;
+        void normalDeCancelEvent(TestCancellableEvent event) {
+            Counter.increment("callCount");
             assertTrue(event.isCancelled());
             event.setCancelled(false);
         }
 
         @Subscribe(postOrder = PostOrder.LATE)
-        public void lateReCancelEvent(TestCancellableEvent event) {
-            callCount++;
+        void lateReCancelEvent(TestCancellableEvent event) {
+            Counter.increment("callCount");
             assertFalse(event.isCancelled());
             event.setCancelled(true);
-        }
-    }
-
-    static final class TestBusImpl extends EventBusImpl<Object, TestSubscriberImpl<?>> {
-        int createdMethodSubscriptions = 0;
-        int createdConsumerSubscriptions = 0;
-
-        @Override
-        @SuppressWarnings("unchecked")
-        protected <L, T, B extends Subscriber<T>> B makeSubscription(
-                @NonNull Class<T> eventClass,
-                @NonNull Subscribe subscribe,
-                @NonNull L listener,
-                @NonNull BiConsumer<L, T> handler) {
-            createdMethodSubscriptions++;
-            return (B) new TestSubscriberImpl<>(
-                    eventClass, subscribe.postOrder(), subscribe.ignoreCancelled(), listener, handler);
-        }
-
-        @Override
-        @SuppressWarnings("unchecked")
-        protected <T, B extends Subscriber<T>> B makeSubscription(
-                @NonNull Class<T> eventClass, @NonNull Consumer<T> handler, @NonNull PostOrder postOrder) {
-            createdConsumerSubscriptions++;
-            return (B) new TestSubscriberImpl<>(eventClass, handler, postOrder);
-        }
-
-        @Override
-        public <T> void findSubscriptions(
-                @NonNull Object listener, TriConsumer<Class<T>, Subscribe, BiConsumer<Object, T>> consumer) {
-            super.findSubscriptions(listener, consumer);
-        }
-    }
-
-    static final class TestSubscriberImpl<E> extends SubscriberImpl<E> {
-        public TestSubscriberImpl(Class<E> eventClass, Consumer<E> handler, PostOrder postOrder) {
-            super(eventClass, handler, postOrder);
-        }
-
-        public <H> TestSubscriberImpl(
-                Class<E> eventClass,
-                PostOrder postOrder,
-                boolean ignoreCancelled,
-                H handlerInstance,
-                BiConsumer<H, E> handler) {
-            super(eventClass, postOrder, ignoreCancelled, handlerInstance, handler);
         }
     }
 }

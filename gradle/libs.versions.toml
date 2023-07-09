@@ -1,8 +1,7 @@
 [versions]
 geantryref = "1.3.13"
-lmbda = "2.0.0"
 slf4j = "2.0.7"
-spoon = "10.4.0"
+javapoet = "1.13.0"
 auto-service = "1.1.1"
 compile-testing = "0.21.0"
 checker-qual = "3.19.0"
@@ -10,11 +9,10 @@ junit = "5.8.2"
 
 [libraries]
 geantyref = { module = "io.leangen.geantyref:geantyref", version.ref = "geantryref" }
-lmbda = { module = "org.lanternpowered:lmbda", version.ref = "lmbda" }
 slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
 slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
 
-spoon = { module = "fr.inria.gforge.spoon:spoon-core", version.ref = "spoon" }
+javapoet = { module = "com.squareup:javapoet", version.ref = "javapoet" }
 auto-service = { module = "com.google.auto.service:auto-service", version.ref = "auto-service" }
 compile-testing = { module = "com.google.testing.compile:compile-testing", version.ref = "compile-testing" }
 

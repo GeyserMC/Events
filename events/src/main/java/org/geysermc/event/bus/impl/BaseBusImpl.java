@@ -28,7 +28,6 @@ import static io.leangen.geantyref.GenericTypeReflector.erase;
 
 import io.leangen.geantyref.TypeToken;
 import java.lang.invoke.MethodHandles;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -46,7 +45,6 @@ import org.geysermc.event.bus.impl.util.Utils;
 import org.geysermc.event.subscribe.Subscribe;
 import org.geysermc.event.subscribe.Subscriber;
 import org.geysermc.event.util.TriConsumer;
-import org.lanternpowered.lmbda.LambdaFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,41 +79,15 @@ abstract class BaseBusImpl<E, S extends Subscriber<? extends E>> implements Base
         }
     }
 
-    @SuppressWarnings("unchecked")
     protected <T extends E> void findSubscriptions(
             @NonNull Object listener, TriConsumer<Class<T>, Subscribe, BiConsumer<Object, T>> consumer) {
-        Class<?> currentClass = listener.getClass();
-        while (currentClass != Object.class) {
-            for (Method method : currentClass.getDeclaredMethods()) {
-                Subscribe subscribe = method.getAnnotation(Subscribe.class);
-
-                if (subscribe == null) {
-                    continue;
-                }
-
-                if (method.getParameterCount() > 1) {
-                    continue;
-                }
-
-                Class<?> firstParameterType = method.getParameters()[0].getType();
-
-                if (!baseEventType.isAssignableFrom(firstParameterType)) {
-                    continue;
-                }
-
-                // allow private subscribers
-                method.setAccessible(true);
-
-                try {
-                    consumer.accept(
-                            (Class<T>) firstParameterType,
-                            subscribe,
-                            LambdaFactory.createBiConsumer(CALLER.unreflect(method)));
-                } catch (IllegalAccessException exception) {
-                    exception.printStackTrace();
-                }
-            }
-            currentClass = currentClass.getSuperclass();
+        try {
+            Class<?> listenerClass = listener.getClass();
+            Class<?> generated = Class.forName(listenerClass.getPackageName() + ".$" + listenerClass.getSimpleName());
+            SubscriptionFinderGenerated.findSubscriptions(baseEventType, generated, consumer);
+        } catch (ClassNotFoundException ignored) {
+            // use reflection based
+            SubscriptionFinderReflectionInvoke.findSubscriptions(baseEventType, listener, consumer);
         }
     }
 
