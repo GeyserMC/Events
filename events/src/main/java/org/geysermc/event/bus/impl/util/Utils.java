@@ -31,7 +31,7 @@ import org.geysermc.event.subscribe.Subscriber;
 
 public final class Utils {
     public static boolean isEventCancelled(Object event) {
-        return event instanceof Cancellable && ((Cancellable) event).isCancelled();
+        return event instanceof Cancellable && ((Cancellable) event).cancelled();
     }
 
     public static boolean shouldCallSubscriber(Subscriber<?> subscriber, Object event) {

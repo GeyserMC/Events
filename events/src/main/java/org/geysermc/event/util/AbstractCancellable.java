@@ -36,12 +36,24 @@ public abstract class AbstractCancellable implements Cancellable {
     protected AbstractCancellable() {}
 
     @Override
-    public final boolean isCancelled() {
+    public final boolean cancelled() {
         return cancelled;
     }
 
     @Override
-    public final void setCancelled(boolean cancelled) {
+    public final void cancelled(boolean cancelled) {
         this.cancelled = cancelled;
+    }
+
+    @Override
+    @Deprecated
+    public final boolean isCancelled() {
+        return cancelled();
+    }
+
+    @Override
+    @Deprecated
+    public final void setCancelled(boolean cancelled) {
+        cancelled(cancelled);
     }
 }

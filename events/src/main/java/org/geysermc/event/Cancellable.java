@@ -26,19 +26,39 @@ package org.geysermc.event;
 
 /**
  * Represents a cancellable event.
+ * @since 1.0
  */
 public interface Cancellable {
     /**
-     * Gets if the event is cancelled.
-     *
-     * @return if the event is cancelled
+     * Returns whether the event is cancelled.
+     * @since 1.2
      */
+    boolean cancelled();
+
+    /**
+     * Set whether the event is cancelled.
+     *
+     * @param cancelled if the event is cancelled
+     * @since 1.2
+     */
+    void cancelled(boolean cancelled);
+
+    /**
+     * Returns whether the event is cancelled.
+     *
+     * @deprecated Replaced with {@link #cancelled()}
+     * @since 1.0
+     */
+    @Deprecated
     boolean isCancelled();
 
     /**
-     * Cancels the event.
+     * Set whether the event is cancelled.
      *
+     * @deprecated Replaced with {@link #cancelled()}
      * @param cancelled if the event is cancelled
+     * @since 1.0
      */
+    @Deprecated
     void setCancelled(boolean cancelled);
 }

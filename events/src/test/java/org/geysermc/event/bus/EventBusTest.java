@@ -204,7 +204,7 @@ class EventBusTest {
 
         Cancellable event = new TestCancellableEvent();
         bus.fire(event);
-        assertTrue(event.isCancelled());
+        assertTrue(event.cancelled());
         assertEquals(3, Counter.byId("callCount"));
     }
 
@@ -257,8 +257,8 @@ class EventBusTest {
         @Subscribe(postOrder = PostOrder.FIRST)
         void firstCancelEvent(TestCancellableEvent event) {
             Counter.increment("callCount");
-            assertFalse(event.isCancelled());
-            event.setCancelled(true);
+            assertFalse(event.cancelled());
+            event.cancelled(true);
         }
 
         @Subscribe(postOrder = PostOrder.EARLY)
@@ -269,15 +269,15 @@ class EventBusTest {
         @Subscribe(ignoreCancelled = true)
         void normalDeCancelEvent(TestCancellableEvent event) {
             Counter.increment("callCount");
-            assertTrue(event.isCancelled());
-            event.setCancelled(false);
+            assertTrue(event.cancelled());
+            event.cancelled(false);
         }
 
         @Subscribe(postOrder = PostOrder.LATE)
         void lateReCancelEvent(TestCancellableEvent event) {
             Counter.increment("callCount");
-            assertFalse(event.isCancelled());
-            event.setCancelled(true);
+            assertFalse(event.cancelled());
+            event.cancelled(true);
         }
     }
 }
