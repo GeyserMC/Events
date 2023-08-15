@@ -24,42 +24,17 @@
  */
 package org.geysermc.event;
 
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
 /**
- * Represents a cancellable event.
- * @since 1.0
+ * This marks the annotated class as not subscribable. Child and parent classes are not affected.
+ * This annotation is only relevant when the base event class is Object, as every class would be considered an event class.
  */
-@NotSubscribable
-public interface Cancellable {
-    /**
-     * Returns whether the event is cancelled.
-     * @since 1.2
-     */
-    boolean cancelled();
-
-    /**
-     * Set whether the event is cancelled.
-     *
-     * @param cancelled if the event is cancelled
-     * @since 1.2
-     */
-    void cancelled(boolean cancelled);
-
-    /**
-     * Returns whether the event is cancelled.
-     *
-     * @deprecated Replaced with {@link #cancelled()}
-     * @since 1.0
-     */
-    @Deprecated
-    boolean isCancelled();
-
-    /**
-     * Set whether the event is cancelled.
-     *
-     * @deprecated Replaced with {@link #cancelled()}
-     * @param cancelled if the event is cancelled
-     * @since 1.0
-     */
-    @Deprecated
-    void setCancelled(boolean cancelled);
-}
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+@Documented
+public @interface NotSubscribable {}

@@ -25,7 +25,9 @@
 package org.geysermc.event.util;
 
 import org.geysermc.event.Cancellable;
+import org.geysermc.event.NotSubscribable;
 
+@NotSubscribable
 public abstract class AbstractCancellable implements Cancellable {
     private boolean cancelled;
 
