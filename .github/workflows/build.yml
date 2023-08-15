@@ -21,7 +21,7 @@ jobs:
           cache-read-only: ${{ github.ref_name != 'master' && github.ref_name != 'development' }}
 
       - name: Publish to Maven Repository
-        if: ${{ github.repository == 'GeyserMC/Events' && github.ref_name == 'master' }}
+        if: ${{ github.ref_name == 'master' || github.ref_name == 'development' }}
         uses: gradle/gradle-build-action@v2
         env:
           ORG_GRADLE_PROJECT_geysermcUsername: ${{ vars.DEPLOY_USER }}

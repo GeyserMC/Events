@@ -22,28 +22,19 @@
  * @author GeyserMC
  * @link https://github.com/GeyserMC/Events
  */
-package org.geysermc.event.util;
+package org.geysermc.event;
 
-import org.geysermc.event.Cancellable;
-import org.geysermc.event.NotSubscribable;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-@NotSubscribable
-public abstract class AbstractCancellable implements Cancellable {
-    private boolean cancelled;
-
-    protected AbstractCancellable(boolean cancelled) {
-        this.cancelled = cancelled;
-    }
-
-    protected AbstractCancellable() {}
-
-    @Override
-    public final boolean isCancelled() {
-        return cancelled;
-    }
-
-    @Override
-    public final void setCancelled(boolean cancelled) {
-        this.cancelled = cancelled;
-    }
-}
+/**
+ * This marks the annotated class as not subscribable. Child and parent classes are not affected.
+ * This annotation is only relevant when the base event class is Object, as every class would be considered an event class.
+ */
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+@Documented
+public @interface NotSubscribable {}

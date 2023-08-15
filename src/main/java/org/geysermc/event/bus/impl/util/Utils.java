@@ -27,6 +27,7 @@ package org.geysermc.event.bus.impl.util;
 import java.util.HashSet;
 import java.util.Set;
 import org.geysermc.event.Cancellable;
+import org.geysermc.event.NotSubscribable;
 import org.geysermc.event.subscribe.Subscriber;
 
 public final class Utils {
@@ -69,7 +70,13 @@ public final class Utils {
             shouldAdd |= ancestorsThatUse(types, superClass, use);
         }
 
-        if (shouldAdd) {
+        // If the event (definition) is an interface, superclass will return null.
+        // This means that no events would be registered if the base class is Object.
+        if (Object.class == use) {
+            shouldAdd = true;
+        }
+
+        if (shouldAdd && type.getAnnotation(NotSubscribable.class) == null) {
             types.add(type);
         }
         return shouldAdd;

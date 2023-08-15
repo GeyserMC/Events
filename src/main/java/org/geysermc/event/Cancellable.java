@@ -27,6 +27,7 @@ package org.geysermc.event;
 /**
  * Represents a cancellable event.
  */
+@NotSubscribable
 public interface Cancellable {
     /**
      * Gets if the event is cancelled.
