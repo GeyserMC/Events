@@ -27,7 +27,6 @@ package org.geysermc.event.bus.impl;
 import static io.leangen.geantyref.GenericTypeReflector.erase;
 
 import io.leangen.geantyref.TypeToken;
-import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -49,8 +48,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 abstract class BaseBusImpl<E, S extends Subscriber<? extends E>> implements BaseBus<E, S> {
-    private static final MethodHandles.Lookup CALLER = MethodHandles.lookup();
-
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final Map<Class<?>, Set<Subscriber<?>>> subscribers = Collections.synchronizedMap(new HashMap<>());

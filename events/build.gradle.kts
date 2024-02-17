@@ -4,6 +4,7 @@ dependencies {
 
   compileOnly(libs.checker.qual)
 
+  testAnnotationProcessor(projects.ap)
   testImplementation(libs.junit.api)
   testRuntimeOnly(libs.junit.engine)
   testRuntimeOnly(libs.slf4j.simple)

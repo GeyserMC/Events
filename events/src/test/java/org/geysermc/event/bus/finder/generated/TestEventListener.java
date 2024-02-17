@@ -25,19 +25,16 @@
 package org.geysermc.event.bus.finder.generated;
 
 import org.geysermc.event.Counter;
+import org.geysermc.event.Listener;
 import org.geysermc.event.TestChildEvent;
 import org.geysermc.event.TestEvent;
 import org.geysermc.event.subscribe.Subscribe;
 
+@Listener
 final class TestEventListener {
     @Subscribe
     public void publicEvent(TestEvent event) {
         Counter.increment("publicEvent");
-    }
-
-    @Subscribe
-    private void privateEvent(TestEvent event) {
-        Counter.increment("privateEvent");
     }
 
     @Subscribe

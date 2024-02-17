@@ -57,7 +57,6 @@ public class SubscriptionFinderGeneratedTest {
 
         bus.fire(new TestEvent());
         assertEquals(1, Counter.byId("publicEvent"));
-        assertEquals(0, Counter.byId("privateEvent"));
         assertEquals(1, Counter.byId("defaultVisibilityEvent"));
         assertEquals(0, Counter.byId("baseEvent"));
         assertEquals(0, Counter.byId("childEvent"));
@@ -65,7 +64,6 @@ public class SubscriptionFinderGeneratedTest {
 
         bus.fire(new TestChildEvent());
         assertEquals(1, Counter.byId("publicEvent"));
-        assertEquals(0, Counter.byId("privateEvent"));
         assertEquals(1, Counter.byId("defaultVisibilityEvent"));
         assertEquals(0, Counter.byId("baseEvent"));
         assertEquals(1, Counter.byId("childEvent"));
@@ -73,7 +71,6 @@ public class SubscriptionFinderGeneratedTest {
 
         bus.fire(new Object());
         assertEquals(0, Counter.byId("publicEvent"));
-        assertEquals(0, Counter.byId("privateEvent"));
         assertEquals(0, Counter.byId("defaultVisibilityEvent"));
         assertEquals(0, Counter.byId("baseEvent"));
         assertEquals(0, Counter.byId("childEvent"));

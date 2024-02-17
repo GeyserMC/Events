@@ -1,6 +1,7 @@
 dependencies {
-  implementation(projects.events)
+  annotationProcessor(libs.auto.service)
   implementation(libs.auto.service)
+  implementation(projects.events)
   implementation(libs.javapoet)
 
   testImplementation(libs.compile.testing)
@@ -13,7 +14,7 @@ tasks.getByName<Test>("test") { useJUnitPlatform() }
 tasks.withType<Test>().configureEach {
   // cannot use javaVersion because it throws errors, but the version is also in the test name
   if (name.startsWith("testJava")) {
-    var javaVersion = JavaVersion.toVersion(name.substring(8).toInt())
+    val javaVersion = JavaVersion.toVersion(name.substring(8).toInt())
     if (!javaVersion.isCompatibleWith(JavaVersion.VERSION_16)) {
       return@configureEach
     }

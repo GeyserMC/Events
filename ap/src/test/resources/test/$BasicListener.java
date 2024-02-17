@@ -10,7 +10,7 @@ import org.geysermc.event.bus.impl.util.GeneratedSubscriberInfo;
  * Automatically generated event method references
  */
 final class $BasicListener {
-    private static final List<GeneratedSubscriberInfo> events;
+    private static final List<GeneratedSubscriberInfo<BasicListener, ?>> events;
 
     static {
         events = new ArrayList<>();

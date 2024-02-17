@@ -32,6 +32,7 @@ import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
+import com.squareup.javapoet.WildcardTypeName;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -46,6 +47,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
+import javax.tools.Diagnostic;
 import org.geysermc.event.Listener;
 import org.geysermc.event.PostOrder;
 import org.geysermc.event.bus.impl.util.GeneratedSubscriberInfo;
@@ -55,7 +57,7 @@ import org.geysermc.event.subscribe.Subscribe;
 @SuppressWarnings("UnstableApiUsage")
 public class ListenerProcessor extends AbstractProcessor {
     @Override
-    public void init(ProcessingEnvironment processingEnv) {
+    public synchronized void init(ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
     }
 
@@ -72,9 +74,9 @@ public class ListenerProcessor extends AbstractProcessor {
             }
 
             try {
-                processType(MoreElements.asType(element));
+                processType((TypeElement) element);
             } catch (IOException exception) {
-                throw new RuntimeException(exception);
+                processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, exception.getMessage());
             }
         }
 
@@ -84,11 +86,14 @@ public class ListenerProcessor extends AbstractProcessor {
     private void processType(TypeElement typeElement) throws IOException {
         var className = ClassName.get(typeElement);
 
+        var infoClass = ParameterizedTypeName.get(
+                ClassName.get(GeneratedSubscriberInfo.class), className, WildcardTypeName.subtypeOf(Object.class));
+
         var spec = TypeSpec.classBuilder('$' + className.simpleName())
                 .addModifiers(Modifier.FINAL)
                 .addJavadoc("Automatically generated event method references")
                 .addField(
-                        ParameterizedTypeName.get(List.class, GeneratedSubscriberInfo.class),
+                        ParameterizedTypeName.get(ClassName.get(List.class), infoClass),
                         "events",
                         Modifier.PRIVATE,
                         Modifier.STATIC,

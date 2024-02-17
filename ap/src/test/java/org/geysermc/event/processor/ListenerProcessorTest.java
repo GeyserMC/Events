@@ -37,11 +37,10 @@ import org.junit.jupiter.api.Test;
 class ListenerProcessorTest {
     @Test
     void testBasicCompilation() {
-        testCompilation("test", "BasicListener", 1);
+        testCompilation("test", "BasicListener");
     }
 
-    static Compilation testCompilation(
-            String sourceResourcePackage, String sourceResourceName, int expectedSourceCount) {
+    static Compilation testCompilation(String sourceResourcePackage, String sourceResourceName) {
         String sourceResource = sourceResourcePackage + '/' + sourceResourceName + ".java";
         String generatedSource = sourceResourcePackage.replace('/', '.') + ".$" + sourceResourceName;
         String targetResource = sourceResourcePackage + "/$" + sourceResourceName + ".java";
